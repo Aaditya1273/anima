@@ -24,9 +24,6 @@ Anima solves this with Fully Homomorphic Encryption. Balances, transfer amounts,
 
 Submitted to the **Zama Developer Program Mainnet Season 3** across all three tracks simultaneously — Builder, Bounty (Confidential Wrapper Registry), and Special Bounty × TokenOps (Confidential Disperse).
 
-**Live app:** [anima.s0nderlabs.xyz](https://anima.s0nderlabs.xyz)
-**Console:** [anima.s0nderlabs.xyz/console](https://anima.s0nderlabs.xyz/console)
-**Docs:** [anima.s0nderlabs.xyz/docs](https://anima.s0nderlabs.xyz/docs)
 
 ---
 
