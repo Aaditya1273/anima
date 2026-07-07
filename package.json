@@ -1,0 +1,29 @@
+{
+  "name": "anima",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Programmable confidential finance — FHE payroll, compliant shielding, and confidential distribution on Ethereum Sepolia.",
+  "repository": "github.com/s0nderlabs/anima",
+  "license": "MIT",
+  "packageManager": "pnpm@9.15.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter @anima/web dev",
+    "build": "pnpm --filter @anima/web build",
+    "compile": "pnpm --filter @anima/contracts compile",
+    "test:contracts": "pnpm --filter @anima/contracts test",
+    "deploy:sepolia": "pnpm --filter @anima/contracts deploy:sepolia",
+    "typecheck": "pnpm --filter @anima/web typecheck",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "fix": "biome check --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}
