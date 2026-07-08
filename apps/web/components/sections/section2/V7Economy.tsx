@@ -1,6 +1,7 @@
 'use client'
 
 import { CONTRACTS, addressUrl, truncate } from '@/lib/chainscan'
+import { TVS_BREAKDOWN, DISPERSE_STATS, PAYROLL_STATS } from '@/lib/snapshot'
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { LayerHeader } from './V2Identity'
@@ -12,7 +13,7 @@ export function V7Economy() {
       className="relative flex min-h-screen items-center py-[var(--section-py)]"
     >
       <div className="mx-auto w-full max-w-[var(--container-wrap)] px-6 sm:px-8">
-        <LayerHeader idx="06" title="Economy" pill="0G Chain · Wallet" />
+        <LayerHeader idx="06" title="TVS Dashboard" pill="Ethereum Sepolia · Aggregate" />
         <div className="mb-10 grid items-baseline gap-8 lg:grid-cols-12">
           <motion.h2
             initial={{ opacity: 0, y: 18 }}
@@ -21,85 +22,100 @@ export function V7Economy() {
             transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
             className="font-display text-[clamp(36px,5vw,68px)] font-light leading-[1.04] tracking-[-0.018em] text-[var(--color-ink)] lg:col-span-7"
           >
-            The agent <span className="font-italic-serif italic">funds itself</span>.
+            Value <span className="font-italic-serif italic">visible at a glance</span>.
           </motion.h2>
           <p className="max-w-md text-[15px] leading-relaxed text-[var(--color-ink-2)] lg:col-span-5">
-            EOA + compute envelope + sandbox reserve all live in one wallet. Auto-topup polls every
-            five minutes and tops the brain back up before it runs dry. Marketplace earnings flow
-            back into the same wallet. Loop closed, no operator hand-holding.
+            Total Value Shielded across all three surfaces. Payroll vault, wrapped balances,
+            and pending distributions — all counted via on-chain totalEncryptedSupply.
+            The aggregate is always public. The details stay encrypted.
           </p>
         </div>
 
         <div className="grid gap-5 lg:grid-cols-3">
-          <WalletPane />
-          <AutoTopupPane />
-          <MarketPane />
+          <VaultPane />
+          <DispersePane />
+          <RegistryPane />
         </div>
       </div>
     </section>
   )
 }
 
-function WalletPane() {
+function VaultPane() {
   return (
-    <PaneShell label="Wallet" symbol="Σ">
+    <PaneShell label="Payroll Vault" symbol="Σ">
       <div className="flex items-baseline justify-between">
-        <div className="font-display text-[34px] leading-none text-[var(--color-ink)]">11.812</div>
+        <div className="font-display text-[34px] leading-none text-[var(--color-ink)]">
+          {TVS_BREAKDOWN.payroll.value.toLocaleString()}
+        </div>
         <span className="font-mono text-[10.5px] tracking-[0.04em] text-[var(--color-ink-3)]">
-          0G Total
+          USDC Shielded
         </span>
       </div>
       <div className="mt-4 space-y-1.5 border-t border-[var(--color-border)] pt-3">
-        <Row label="EOA · Mainnet" value="2.607" />
-        <Row label="Compute Envelope" value="4.23" />
-        <Row label="Sandbox Reserve" value="1.481" />
-        <Row label="Pending Earnings" value="3.494" />
+        <Row label="Active Employees" value={`${PAYROLL_STATS.activeEmployees}`} />
+        <Row label="Salaries Paid" value={`${PAYROLL_STATS.totalSalariesPaid}`} />
+        <Row label="Yield Vault" value="Steakhouse cPrime USDC" />
+        <Row label="Pending Yield" value={PAYROLL_STATS.pendingYieldDeposits === 1 ? '1 deposit' : '0'} />
       </div>
       <Refresh />
     </PaneShell>
   )
 }
 
-function AutoTopupPane() {
+function DispersePane() {
   return (
-    <PaneShell label="AutoTopup" symbol="⚡">
+    <PaneShell label="Distributions" symbol="↗">
       <div className="flex items-baseline justify-between">
-        <div className="font-display text-[34px] leading-none text-[var(--color-ink)]">2/5</div>
+        <div className="font-display text-[34px] leading-none text-[var(--color-ink)]">
+          {TVS_BREAKDOWN.disperse.value.toLocaleString()}
+        </div>
         <span className="font-mono text-[10.5px] tracking-[0.04em] text-[var(--color-ink-3)]">
-          Fired Today
+          USDC Distributed
         </span>
       </div>
       <div className="mt-4 space-y-1.5 border-t border-[var(--color-border)] pt-3">
-        <Row label="Poll Cadence" value="every 5 min" />
-        <Row label="Threshold" value="0.5 0G" />
-        <Row label="Last Fired" value="2m ago" />
-        <Row label="Last Tx" value="0xa12c…1129" />
+        <Row label="Distributions" value={`${DISPERSE_STATS.distributionsCreated}`} />
+        <Row label="Total Recipients" value={`${DISPERSE_STATS.totalRecipients}`} />
+        <Row label="Active" value={`${DISPERSE_STATS.activeDistributions}`} />
+        <Row label="Last Tx" value={truncate(DISPERSE_STATS.lastDistributionTx, 8, 6)} />
       </div>
-      <FiringPulse />
+      <div className="mt-4 flex items-center gap-2">
+        <motion.span
+          animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.18, 1] }}
+          transition={{ duration: 1.6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+          className="block h-2 w-2 rounded-full bg-[var(--color-ink)]"
+        />
+        <span className="font-mono text-[10px] tracking-[0.04em] text-[var(--color-ink-2)]">
+          All encrypted
+        </span>
+      </div>
     </PaneShell>
   )
 }
 
-function MarketPane() {
+function RegistryPane() {
   return (
-    <PaneShell label="Market" symbol="↗">
+    <PaneShell label="Wrapped Balances" symbol="🔒">
       <div className="flex items-baseline justify-between">
-        <div className="font-display text-[34px] leading-none text-[var(--color-ink)]">3.494</div>
+        <div className="font-display text-[34px] leading-none text-[var(--color-ink)]">
+          {TVS_BREAKDOWN.registry.value.toLocaleString()}
+        </div>
         <span className="font-mono text-[10.5px] tracking-[0.04em] text-[var(--color-ink-3)]">
-          Settled Today
+          USDC Wrapped
         </span>
       </div>
       <div className="mt-4 space-y-1.5 border-t border-[var(--color-border)] pt-3">
-        <Row label="Active Jobs" value="2 · specter, fox" />
-        <Row label="Last Settle" value="0x3ebd…772a" />
+        <Row label="Official Pairs" value="Indexed from Zama registry" />
+        <Row label="Total TVS" value={`${TVS_BREAKDOWN.total.toLocaleString()} USDC`} />
         <a
-          href={addressUrl(CONTRACTS.AnimaMarket)}
+          href={addressUrl(CONTRACTS.AnimaRegistryRouter)}
           target="_blank"
           rel="noreferrer"
           className="font-mono flex items-baseline justify-between gap-3 pt-1 text-[11.5px] tracking-[0.04em] text-[var(--color-ink-2)] transition hover:text-[var(--color-ink)]"
         >
-          <span>Contract</span>
-          <span>{truncate(CONTRACTS.AnimaMarket, 8, 6)} ↗</span>
+          <span>Registry Router</span>
+          <span>{truncate(CONTRACTS.AnimaRegistryRouter, 8, 6)} ↗</span>
         </a>
       </div>
     </PaneShell>
@@ -159,21 +175,6 @@ function Refresh() {
     <div className="font-mono mt-4 flex items-center justify-between text-[10px] tracking-[0.04em] text-[var(--color-ink-3)]">
       <span>Last Refresh</span>
       <span>{now}</span>
-    </div>
-  )
-}
-
-function FiringPulse() {
-  return (
-    <div className="mt-4 flex items-center gap-2">
-      <motion.span
-        animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.18, 1] }}
-        transition={{ duration: 1.6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
-        className="block h-2 w-2 rounded-full bg-[var(--color-ink)]"
-      />
-      <span className="font-mono text-[10px] tracking-[0.04em] text-[var(--color-ink-2)]">
-        Polling Now
-      </span>
     </div>
   )
 }

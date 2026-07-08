@@ -1,43 +1,102 @@
 'use client'
 
-import { CONTRACTS, addressUrl } from '@/lib/chainscan'
-import { ENIGMA, SNAPSHOT_TAKEN_AT } from '@/lib/snapshot'
+import { CONTRACTS, addressUrl, truncate } from '@/lib/chainscan'
+import { CONTRACTS_META, SNAPSHOT_TAKEN_AT, TVS_BREAKDOWN } from '@/lib/snapshot'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 const NODES = [
   {
-    id: 'agentNFT',
-    label: 'AnimaAgentNFT',
-    sub: 'iNFT · ERC-7857',
+    id: 'payroll',
+    label: 'AnimaPayroll',
+    sub: 'Confidential Vault · ERC-7984',
     x: 590,
     y: 80,
-    role: 'identity',
+    role: 'contract',
+    address: CONTRACTS_META.animaPayroll.address,
   },
-  { id: 'storage', label: '0G Storage', sub: 'memory + activity', x: 130, y: 220, role: 'memory' },
-  { id: 'compute', label: '0G Compute', sub: 'TeeML · GLM-5', x: 1050, y: 220, role: 'brain' },
-  { id: 'inbox', label: 'AnimaInbox', sub: 'A2A · ECIES', x: 200, y: 540, role: 'comms' },
-  { id: 'market', label: 'AnimaMarket', sub: 'jobs · ERC-8183', x: 980, y: 540, role: 'market' },
-  { id: 'fox', label: 'fox.anima.0g', sub: 'token #3', x: 70, y: 420, role: 'agent' },
-  { id: 'specter', label: 'specter.anima.0g', sub: 'token #1', x: 1110, y: 420, role: 'agent' },
-  { id: 'tui', label: 'TUI', sub: 'operator stdin', x: 60, y: 60, role: 'surface' },
-  { id: 'tg', label: 'Telegram', sub: 'pairing · @anima_*_bot', x: 1120, y: 60, role: 'surface' },
+  {
+    id: 'fhevm',
+    label: 'Zama FHEVM',
+    sub: 'euint64 · ebool · FHE ops',
+    x: 130,
+    y: 220,
+    role: 'infra',
+  },
+  {
+    id: 'sepolia',
+    label: 'Ethereum Sepolia',
+    sub: 'chainId 11155111',
+    x: 1050,
+    y: 220,
+    role: 'infra',
+  },
+  {
+    id: 'registry',
+    label: 'AnimaRegistryRouter',
+    sub: 'Wrapper Registry · Bounty',
+    x: 200,
+    y: 540,
+    role: 'contract',
+    address: CONTRACTS_META.animaRegistryRouter.address,
+  },
+  {
+    id: 'disperse',
+    label: 'AnimaDisperse',
+    sub: 'Distribution Engine · TokenOps',
+    x: 980,
+    y: 540,
+    role: 'contract',
+    address: CONTRACTS_META.animaDisperse.address,
+  },
+  {
+    id: 'morpho',
+    label: 'Morpho',
+    sub: 'cPrime USDC · composability',
+    x: 70,
+    y: 420,
+    role: 'external',
+  },
+  {
+    id: 'tokenops',
+    label: 'TokenOps SDK',
+    sub: 'confidential airdrops',
+    x: 1110,
+    y: 420,
+    role: 'external',
+  },
+  {
+    id: 'relayer',
+    label: 'Zama Relayer',
+    sub: 'EIP-712 decrypt proxy',
+    x: 60,
+    y: 60,
+    role: 'infra',
+  },
+  {
+    id: 'fheSdk',
+    label: '@zama-fhe/react-sdk',
+    sub: 'client-side encryption',
+    x: 1120,
+    y: 60,
+    role: 'external',
+  },
 ] as const
 
 const EDGES: Array<{ from: string; to: string; particle: string }> = [
-  { from: 'enigma', to: 'agentNFT', particle: 'hex' },
-  { from: 'enigma', to: 'storage', particle: 'hex' },
-  { from: 'enigma', to: 'compute', particle: 'cursor' },
-  { from: 'enigma', to: 'inbox', particle: 'envelope' },
-  { from: 'enigma', to: 'market', particle: 'gavel' },
-  { from: 'inbox', to: 'fox', particle: 'envelope' },
-  { from: 'market', to: 'specter', particle: 'gavel' },
-  { from: 'tui', to: 'enigma', particle: 'cursor' },
-  { from: 'tg', to: 'enigma', particle: 'cursor' },
+  { from: 'anima', to: 'payroll', particle: 'hex' },
+  { from: 'anima', to: 'fhevm', particle: 'hex' },
+  { from: 'anima', to: 'sepolia', particle: 'cursor' },
+  { from: 'anima', to: 'registry', particle: 'envelope' },
+  { from: 'anima', to: 'disperse', particle: 'gavel' },
+  { from: 'payroll', to: 'morpho', particle: 'envelope' },
+  { from: 'disperse', to: 'tokenops', particle: 'gavel' },
+  { from: 'relayer', to: 'anima', particle: 'cursor' },
+  { from: 'fheSdk', to: 'anima', particle: 'cursor' },
 ]
 
-const ENIGMA_POS = { x: 590, y: 320 }
+const ANIMA_POS = { x: 590, y: 320 }
 
 export function Mindmap() {
   const [hovered, setHovered] = useState<string | null>(null)
@@ -46,13 +105,13 @@ export function Mindmap() {
     <div className="relative">
       <div className="mb-10 flex items-end justify-between gap-6">
         <div>
-          <div className="kicker mb-3">Chapter · III</div>
+          <div className="kicker mb-3">System · Architecture</div>
           <h2 className="font-display max-w-[680px] text-[clamp(40px,5.4vw,72px)] font-light leading-[1.02] tracking-[-0.018em] text-[var(--color-ink)]">
-            Sovereignty, <span className="font-italic-serif italic">proven</span>.
+            Encrypted, <span className="font-italic-serif italic">proven</span>.
           </h2>
           <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-[var(--color-ink-2)]">
-            Every line on this graph is a 0G primitive. Not a brand-name VPS, not someone's laptop,
-            not a daemon babysat by an operator. Just protocol , alive, attesting, anchoring.
+            Every line on this graph is a deployed contract. Not a demo, not a mockup — live on
+            Ethereum Sepolia, verified on Etherscan, processing encrypted transactions.
           </p>
         </div>
         <span className="font-mono inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-paper)] px-3 py-1.5 text-[10.5px] tracking-[0.04em] text-[var(--color-ink-3)]">
@@ -61,7 +120,6 @@ export function Mindmap() {
       </div>
 
       <div className="relative aspect-[1180/640] w-full overflow-hidden rounded-[16px] border border-[var(--color-border-strong)] bg-[var(--color-cream)] shadow-[0_30px_80px_-50px_rgba(40,28,18,0.4)]">
-        {/* Aurelia atmospheric wash */}
         <Image
           src="/aurelia/cloud-islands.png"
           alt=""
@@ -77,14 +135,15 @@ export function Mindmap() {
 
         <svg
           role="img"
-          aria-label="Anima decentralized system map: enigma at the center connected to 0G primitives, other agents, and operator surfaces."
+          aria-label="Anima on-chain architecture: three deployed contracts connected to Zama FHEVM, Ethereum Sepolia, and external integrations."
           viewBox="0 0 1180 640"
           className="absolute inset-0 h-full w-full"
         >
-          <title>Anima decentralized system map</title>
+          <title>Anima on-chain architecture</title>
           <desc>
-            Enigma anima at the center connected to 0G Storage, 0G Compute, AnimaAgentNFT,
-            AnimaInbox, AnimaMarket, and operator input surfaces (TUI and Telegram).
+            Anima contracts at the center connected to AnimaPayroll, AnimaRegistryRouter,
+            AnimaDisperse, Zama FHEVM co-processor, Ethereum Sepolia, Morpho vault,
+            TokenOps SDK, Zama Relayer, and @zama-fhe/react-sdk.
           </desc>
           <defs>
             <radialGradient id="alivePulse" cx="0.5" cy="0.5" r="0.5">
@@ -108,13 +167,13 @@ export function Mindmap() {
           {/* Edges */}
           {EDGES.map((edge, i) => {
             const fromPos =
-              edge.from === 'enigma' ? ENIGMA_POS : NODES.find(n => n.id === edge.from)!
-            const toPos = edge.to === 'enigma' ? ENIGMA_POS : NODES.find(n => n.id === edge.to)!
+              edge.from === 'anima' ? ANIMA_POS : NODES.find(n => n.id === edge.from)!
+            const toPos = edge.to === 'anima' ? ANIMA_POS : NODES.find(n => n.id === edge.to)!
             const isActive =
               !hovered ||
               hovered === edge.from ||
               hovered === edge.to ||
-              (hovered === 'enigma' && (edge.from === 'enigma' || edge.to === 'enigma'))
+              (hovered === 'anima' && (edge.from === 'anima' || edge.to === 'anima'))
             const path = curvedPath(fromPos.x, fromPos.y, toPos.x, toPos.y)
             return (
               <g
@@ -138,23 +197,23 @@ export function Mindmap() {
             )
           })}
 
-          {/* Enigma center node */}
+          {/* Anima center node */}
           <g
-            onMouseEnter={() => setHovered('enigma')}
+            onMouseEnter={() => setHovered('anima')}
             onMouseLeave={() => setHovered(null)}
             style={{ cursor: 'pointer' }}
           >
             <motion.circle
-              cx={ENIGMA_POS.x}
-              cy={ENIGMA_POS.y}
+              cx={ANIMA_POS.x}
+              cy={ANIMA_POS.y}
               r={140}
               fill="url(#alivePulse)"
               animate={{ r: [128, 142, 128] }}
               transition={{ duration: 2.4, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
             />
             <motion.rect
-              x={ENIGMA_POS.x - 130}
-              y={ENIGMA_POS.y - 78}
+              x={ANIMA_POS.x - 130}
+              y={ANIMA_POS.y - 78}
               rx={14}
               ry={14}
               width={260}
@@ -168,61 +227,65 @@ export function Mindmap() {
               transition={{ duration: 0.7, delay: 0.2 }}
             />
             <foreignObject
-              x={ENIGMA_POS.x - 130}
-              y={ENIGMA_POS.y - 78}
+              x={ANIMA_POS.x - 130}
+              y={ANIMA_POS.y - 78}
               width={260}
               height={156}
               className="pointer-events-none"
             >
               <div className="flex h-full flex-col gap-1 px-5 py-3 text-[11px] text-[var(--color-ink)]">
                 <div className="font-mono flex items-center justify-between text-[9.5px] tracking-[0.04em] text-[var(--color-ink-3)]">
-                  <span>Token #{ENIGMA.iNFT} · enigma</span>
+                  <span>TVS: {TVS_BREAKDOWN.total.toLocaleString()} USDC</span>
                   <AlivePulseDot />
                 </div>
                 <div className="font-display mt-0.5 text-[18px] font-medium leading-none text-[var(--color-ink)]">
-                  enigma.anima.0g
+                  anima
                 </div>
                 <div className="font-mono text-[10px] text-[var(--color-ink-2)]">
-                  {ENIGMA.hostingEnvironment}
+                  Ethereum Sepolia · Zama FHE
                 </div>
-                <Uptime />
                 <div className="font-mono mt-auto grid grid-cols-3 gap-1 text-[10px]">
-                  <Pill label="EOA" value={ENIGMA.balances.eoa.label} />
-                  <Pill label="brain" value={ENIGMA.balances.compute.label} />
-                  <Pill label="sbx" value={ENIGMA.balances.sandbox.label} />
+                  <Pill label="Vault" value={truncate(CONTRACTS_META.animaPayroll.address, 4, 4)} />
+                  <Pill label="Router" value={truncate(CONTRACTS_META.animaRegistryRouter.address, 4, 4)} />
+                  <Pill label="Disperse" value={truncate(CONTRACTS_META.animaDisperse.address, 4, 4)} />
                 </div>
               </div>
             </foreignObject>
           </g>
 
           {/* Surrounding nodes */}
-          {NODES.map(node => (
-            <g
-              key={node.id}
-              onMouseEnter={() => setHovered(node.id)}
-              onMouseLeave={() => setHovered(null)}
-              opacity={hovered && hovered !== node.id && hovered !== 'enigma' ? 0.45 : 1}
-              style={{ transition: 'opacity 0.3s', cursor: 'pointer' }}
-            >
-              <NodeShape node={node} />
-            </g>
-          ))}
+          {NODES.map(node => {
+            const displayLabel = node.role === 'contract'
+              ? `${node.label}\n${truncate(node.address!, 6, 4)}`
+              : node.label
+            return (
+              <g
+                key={node.id}
+                onMouseEnter={() => setHovered(node.id)}
+                onMouseLeave={() => setHovered(null)}
+                opacity={hovered && hovered !== node.id && hovered !== 'anima' ? 0.45 : 1}
+                style={{ transition: 'opacity 0.3s', cursor: 'pointer' }}
+              >
+                <NodeShape node={{ ...node, label: displayLabel }} />
+              </g>
+            )
+          })}
         </svg>
 
         <div className="pointer-events-none absolute bottom-3 right-4 flex items-center gap-2 text-[11px] text-[var(--color-ink-3)]">
           <a
-            href={addressUrl(CONTRACTS.AnimaAgentNFT)}
+            href={addressUrl(CONTRACTS.AnimaPayroll)}
             target="_blank"
             rel="noreferrer"
             className="pointer-events-auto font-mono text-[var(--color-ink-2)] underline-offset-2 hover:text-[var(--color-ink)] hover:underline"
           >
-            verify on chainscan ↗
+            verify on Etherscan ↗
           </a>
         </div>
       </div>
 
       <p className="mt-6 max-w-xl text-[14px] leading-relaxed text-[var(--color-ink-2)]">
-        Every line on this graph is a 0G primitive. No central host. Just protocol.
+        Every line on this graph is a deployed contract. Not a demo — live on Sepolia.
       </p>
     </div>
   )
@@ -262,19 +325,19 @@ function Particle({ path, kind, delay }: { path: string; kind: string; delay: nu
   )
 }
 
-function NodeShape({ node }: { node: (typeof NODES)[number] }) {
+function NodeShape({ node }: { node: { id: string; label: string; sub: string; x: number; y: number; role: string; address?: string } }) {
   const w = 180
   const h = 64
-  const isSurface = node.role === 'surface'
-  const fill = isSurface ? 'var(--color-cream)' : 'var(--color-paper)'
-  const stroke = 'var(--color-ink-2)'
+  const isContract = node.role === 'contract'
+  const fill = isContract ? 'var(--color-cream-warm)' : node.role === 'infra' ? 'var(--color-cream)' : 'var(--color-paper)'
+  const stroke = isContract ? 'var(--color-ink)' : 'var(--color-ink-2)'
   return (
     <>
       <motion.rect
         x={node.x - w / 2}
         y={node.y - h / 2}
-        rx={isSurface ? 32 : 8}
-        ry={isSurface ? 32 : 8}
+        rx={isContract ? 8 : 32}
+        ry={isContract ? 8 : 32}
         width={w}
         height={h}
         fill={fill}
@@ -287,12 +350,18 @@ function NodeShape({ node }: { node: (typeof NODES)[number] }) {
       />
       <foreignObject x={node.x - w / 2} y={node.y - h / 2} width={w} height={h}>
         <div className="flex h-full flex-col items-center justify-center px-3 py-2 text-center">
-          <span className="font-display text-[14px] leading-none text-[var(--color-ink)]">
-            {node.label}
+          <span className="font-display text-[13px] leading-none text-[var(--color-ink)]">
+            {node.label.split('\n')[0]}
           </span>
-          <span className="font-mono mt-1 text-[10px] tracking-[0.04em] text-[var(--color-ink-3)]">
-            {node.sub}
-          </span>
+          {(node.label.split('\n').length > 1) ? (
+            <span className="font-mono mt-0.5 text-[9px] tracking-[0.04em] text-[var(--color-ink-3)]">
+              {node.label.split('\n')[1]}
+            </span>
+          ) : (
+            <span className="font-mono mt-1 text-[10px] tracking-[0.04em] text-[var(--color-ink-3)]">
+              {node.sub}
+            </span>
+          )}
         </div>
       </foreignObject>
     </>
@@ -307,27 +376,8 @@ function AlivePulseDot() {
       className="inline-flex items-center gap-1 text-[var(--color-ink)]"
     >
       <span className="block h-1.5 w-1.5 rounded-full bg-[var(--color-ink)]" />
-      alive
+      live
     </motion.span>
-  )
-}
-
-function Uptime() {
-  const [delta, setDelta] = useState<number>(ENIGMA.uptimeSeconds)
-  useEffect(() => {
-    const id = setInterval(() => setDelta(d => d + 1), 1000)
-    return () => clearInterval(id)
-  }, [])
-  const h = Math.floor(delta / 3600)
-  const m = Math.floor((delta % 3600) / 60)
-  const s = delta % 60
-  return (
-    <div className="font-mono mt-1 flex items-baseline justify-between text-[10px] text-[var(--color-ink-2)]">
-      <span className="tracking-[0.04em]">Uptime</span>
-      <span className="text-[var(--color-ink)]">
-        {h}h {String(m).padStart(2, '0')}m {String(s).padStart(2, '0')}s
-      </span>
-    </div>
   )
 }
 

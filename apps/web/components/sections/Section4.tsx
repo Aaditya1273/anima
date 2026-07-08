@@ -1,5 +1,4 @@
-// Section 4 · Closing CTA card
-// Full implementation lands in Phase F of the build plan.
+// Section 4 · Closing CTA — confidential finance
 
 import { ClosingCta } from './section4/ClosingCta'
 

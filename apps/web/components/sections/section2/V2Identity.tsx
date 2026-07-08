@@ -1,7 +1,7 @@
 'use client'
 
 import { CONTRACTS, addressUrl, truncate } from '@/lib/chainscan'
-import { SPECTER, SPECTER_SLOTS } from '@/lib/snapshot'
+import { CONTRACTS_META, TVS_BREAKDOWN } from '@/lib/snapshot'
 import { motion } from 'framer-motion'
 
 const cardEntrance = {
@@ -21,7 +21,7 @@ export function V2Identity() {
       className="relative flex min-h-screen items-center py-[var(--section-py)]"
     >
       <div className="mx-auto w-full max-w-[var(--container-wrap)] px-6 sm:px-8">
-        <LayerHeader title="Identity" pill="0G Chain · ERC-7857" idx="01" />
+        <LayerHeader title="Payroll" pill="Sepolia · AnimaPayroll" idx="01" />
         <div className="grid items-center gap-12 lg:grid-cols-12">
           <div className="space-y-6 lg:col-span-5">
             <motion.h2
@@ -31,16 +31,16 @@ export function V2Identity() {
               transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
               className="font-display text-[clamp(36px,5vw,68px)] font-light leading-[1.04] tracking-[-0.018em] text-[var(--color-ink)]"
             >
-              An agent <span className="font-italic-serif italic">stamped</span> into chain.
+              Salaries <span className="font-italic-serif italic">encrypted</span>, not exposed.
             </motion.h2>
             <p className="max-w-md text-[15px] leading-relaxed text-[var(--color-ink-2)]">
-              Every anima is an iNFT under ERC-7857 on 0G Chain. Six IntelligentData slots anchor
-              everything intrinsic to the agent: keystore, memory index, identity, persona, profile,
-              activity log. Transfer the iNFT, transfer the agent.
+              Every salary in AnimaPayroll is an euint64 handle on Ethereum Sepolia. The CFO pays
+              employees without ever revealing the amount on-chain. FHE arithmetic handles
+              deposits, withdrawals, and yield composability — all without a single decryption.
             </p>
             <div className="font-mono inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] px-3 py-1.5 text-[10.5px] tracking-[0.04em] text-[var(--color-ink-2)]">
               <span className="block h-1.5 w-1.5 rounded-full bg-[var(--color-ink)]" />
-              Token #{SPECTER.iNFT} · specter
+              Etherscan-verified
             </div>
           </div>
 
@@ -74,50 +74,52 @@ function CertificateCard() {
         className="pointer-events-none absolute -inset-px rounded-[10px] border border-[var(--color-ink)]"
       />
       <div className="font-mono mb-1 text-[10.5px] tracking-[0.04em] text-[var(--color-ink-3)]">
-        Anima Agent NFT · ERC-7857
+        AnimaPayroll · ERC-7984
       </div>
       <div className="font-display mb-5 flex items-baseline justify-between gap-3 text-[28px] font-medium leading-none text-[var(--color-ink)]">
-        <span>token #{SPECTER.iNFT}</span>
-        <span className="font-body text-[15px] font-medium text-[var(--color-ink-2)]">specter</span>
+        <span>confidential vault</span>
+        <span className="font-body text-[15px] font-medium text-[var(--color-ink-2)]">
+          {truncate(CONTRACTS_META.animaPayroll.address, 6, 4)}
+        </span>
       </div>
 
       <div className="space-y-1.5 border-y border-[var(--color-border)] py-4">
-        {SPECTER_SLOTS.map((slot, idx) => (
-          <motion.div
-            key={slot.name}
-            initial={{ opacity: 0, x: -6 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.4, delay: 0.5 + idx * 0.06 }}
-            className="font-mono flex items-baseline justify-between gap-3 text-[12px]"
-          >
-            <span className="text-[var(--color-ink-2)]">Slot · {slot.name}</span>
-            <span className="text-[var(--color-ink)]">{slot.hash}</span>
-          </motion.div>
-        ))}
+        <SlotRow label="Total Salaries Paid" value={`${TVS_BREAKDOWN.payroll.label}`} />
+        <SlotRow label="Active Employees" value="3" />
+        <SlotRow label="Yield Vault" value="Steakhouse cPrime USDC" />
+        <SlotRow label="Protocol" value="Zama FHEVM · euint64" />
+        <SlotRow label="Chain" value="Ethereum Sepolia (11155111)" />
       </div>
 
       <div className="font-mono mt-4 flex flex-col gap-2 text-[12px]">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-[var(--color-ink-3)] tracking-[0.04em]">Owner</span>
-          <span className="text-[var(--color-ink)]">{truncate(SPECTER.owner, 6, 4)}</span>
+          <span className="text-[var(--color-ink-3)] tracking-[0.04em]">Deployer</span>
+          <span className="text-[var(--color-ink)]">0x1062…1BdA</span>
         </div>
         <a
-          href={addressUrl(CONTRACTS.AnimaAgentNFT)}
+          href={addressUrl(CONTRACTS.AnimaPayroll)}
           target="_blank"
           rel="noreferrer"
           className="flex items-baseline justify-between gap-3 text-[var(--color-ink-2)] transition hover:text-[var(--color-ink)]"
         >
           <span className="tracking-[0.04em]">Contract</span>
           <span>
-            {truncate(CONTRACTS.AnimaAgentNFT, 8, 6)} <span aria-hidden>↗</span>
+            {truncate(CONTRACTS.AnimaPayroll, 8, 6)} <span aria-hidden>↗</span>
           </span>
         </a>
       </div>
 
-      {/* Faux corner stamps for "document" feel */}
-      <CornerStamp className="-top-3 left-6" label="0G Chain" />
-      <CornerStamp className="-bottom-3 right-6 rotate-3" label="Verified" />
+      <CornerStamp className="-top-3 left-6" label="Ethereum Sepolia" />
+      <CornerStamp className="-bottom-3 right-6 rotate-3" label="FHE" />
+    </div>
+  )
+}
+
+function SlotRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="font-mono flex items-baseline justify-between gap-3 text-[12px]">
+      <span className="text-[var(--color-ink-2)]">{label}</span>
+      <span className="text-[var(--color-ink)]">{value}</span>
     </div>
   )
 }

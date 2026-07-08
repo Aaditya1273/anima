@@ -1,5 +1,4 @@
-// Section 3 · Sovereignty, proven (mindmap)
-// Full implementation lands in Phase E of the build plan.
+// Section 3 · Architecture mindmap — live contracts on Ethereum Sepolia + Zama FHEVM
 
 import { Mindmap } from './section3/Mindmap'
 import { Mindmap as MindmapMobile } from './section3/MindmapMobile'

@@ -8,16 +8,23 @@ const PROJECT_LINKS = [
   { label: 'Releases', href: 'https://github.com/Aaditya1273/anima/releases', external: true },
 ]
 
-const COMMUNITY_LINKS = [{ label: '@Aaditya1273', href: 'https://x.com/Aaditya1273', external: true }]
+const COMMUNITY_LINKS = [{ label: '@Aaditya1273', href: 'https://x.com/iocryposto1273', external: true }]
 
 const ON_CHAIN: Array<{ name: string; address: string; label: string }> = [
-  { name: 'AnimaAgentNFT', address: CONTRACTS.AnimaAgentNFT, label: 'iNFT registry · ERC-7857' },
-  { name: 'AnimaInbox', address: CONTRACTS.AnimaInbox, label: 'A2A messaging · ECIES' },
-  { name: 'AnimaMarket', address: CONTRACTS.AnimaMarket, label: 'job marketplace · ERC-8183' },
   {
-    name: 'Subname Registrar',
-    address: CONTRACTS.SubnameRegistrar,
-    label: '.anima.0g registrar',
+    name: 'AnimaPayroll',
+    address: CONTRACTS.AnimaPayroll,
+    label: 'confidential vault · FHE',
+  },
+  {
+    name: 'AnimaRegistryRouter',
+    address: CONTRACTS.AnimaRegistryRouter,
+    label: 'wrapper registry · ERC-7984',
+  },
+  {
+    name: 'AnimaDisperse',
+    address: CONTRACTS.AnimaDisperse,
+    label: 'distribution engine · TokenOps',
   },
 ]
 
@@ -34,8 +41,7 @@ export function Footer() {
               anima
             </Link>
             <p className="mt-4 max-w-xs text-[14px] leading-relaxed text-[var(--color-ink-2)]">
-              First fully on-chain sovereign agent harness. Identity, brain, memory, limbs, comms,
-              and economy live on 0G.
+              Programmable confidential finance on Ethereum Sepolia. FHE-powered payroll, compliant token shielding, and confidential distributions.
             </p>
           </div>
 

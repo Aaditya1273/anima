@@ -1,6 +1,6 @@
 'use client'
 
-import { TOOL_CATEGORIES, TOTAL_TOOL_COUNT } from '@/lib/tools-catalog'
+import { TOTAL_FHE_OPS, FHE_OPS_CATALOG } from '@/lib/snapshot'
 import { motion } from 'framer-motion'
 import { useState } from 'react'
 import { LayerHeader } from './V2Identity'
@@ -13,7 +13,6 @@ export function V5Limbs() {
       id="layer-limbs"
       className="relative flex min-h-screen items-center overflow-hidden py-[var(--section-py)]"
     >
-      {/* dotted graph paper background */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-[0.18]"
@@ -24,7 +23,7 @@ export function V5Limbs() {
         }}
       />
       <div className="relative mx-auto w-full max-w-[var(--container-wrap)] px-6 sm:px-8">
-        <LayerHeader idx="04" title="Limbs" pill={`${TOTAL_TOOL_COUNT} tools · 4 plugins`} />
+        <LayerHeader idx="04" title="FHE Operations" pill={`${TOTAL_FHE_OPS} primitives · 5 categories`} />
         <div className="mb-10 grid items-baseline gap-8 lg:grid-cols-12">
           <motion.h2
             initial={{ opacity: 0, y: 18 }}
@@ -33,15 +32,13 @@ export function V5Limbs() {
             transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
             className="font-display text-[clamp(36px,5vw,68px)] font-light leading-[1.04] tracking-[-0.018em] text-[var(--color-ink)] lg:col-span-7"
           >
-            The brain decides. Limbs <span className="font-italic-serif italic">just execute</span>.
+            The contract decides. FHE <span className="font-italic-serif italic">just executes</span>.
           </motion.h2>
           <p className="max-w-md text-[15px] leading-relaxed text-[var(--color-ink-2)] lg:col-span-5">
-            Tools are dumb on purpose. No mini-LLM inside{' '}
-            <span className="font-mono text-[var(--color-ink)]">shell.run</span>, no heuristic
-            fallbacks inside{' '}
-            <span className="font-mono text-[var(--color-ink)]">browser.click</span>. Brain decides
-            everything; limbs execute literal commands. Same shape as Claude Code's tools , every
-            decision auditable.
+            Every FHE primitive is a tool in the co-processor toolbox. No plaintext touches the
+            EVM. Arithmetic runs homomorphically. Permissions are explicit via FHE.allow. 
+            Every operation is auditable on-chain — the inputs are encrypted, the operation itself
+            is transparent.
           </p>
         </div>
 
@@ -52,24 +49,24 @@ export function V5Limbs() {
           transition={{ staggerChildren: 0.04 }}
           className="space-y-5"
         >
-          {TOOL_CATEGORIES.map(cat => (
+          {FHE_OPS_CATALOG.map(cat => (
             <motion.div
-              key={cat.label}
+              key={cat.category}
               variants={{ hidden: { opacity: 0 }, show: { opacity: 1 } }}
               transition={{ staggerChildren: 0.025 }}
-              onMouseEnter={() => setActiveCategory(cat.label)}
+              onMouseEnter={() => setActiveCategory(cat.category)}
               onMouseLeave={() => setActiveCategory(null)}
               className="grid grid-cols-12 items-baseline gap-4"
               style={{
-                opacity: activeCategory && activeCategory !== cat.label ? 0.32 : 1,
+                opacity: activeCategory && activeCategory !== cat.category ? 0.32 : 1,
                 transition: 'opacity 0.25s',
               }}
             >
               <div className="font-mono col-span-12 text-[10.5px] tracking-[0.04em] text-[var(--color-ink-2)] sm:col-span-2">
-                {cat.label} <span className="text-[var(--color-ink-3)]">/{cat.tools.length}</span>
+                {cat.category} <span className="text-[var(--color-ink-3)]">/{cat.ops.length}</span>
               </div>
               <div className="col-span-12 flex flex-wrap gap-1.5 sm:col-span-10">
-                {cat.tools.map(t => (
+                {cat.ops.map(t => (
                   <ToolChip key={t.name} name={t.name} desc={t.desc} />
                 ))}
               </div>
@@ -84,8 +81,7 @@ export function V5Limbs() {
           transition={{ duration: 0.9, delay: 0.5 }}
           className="mt-12 text-[13px] text-[var(--color-ink-2)]"
         >
-          70 dumb tools. Fully auditable. Every call goes through the brain, gets a permission
-          check, and lands in the activity log.
+          {TOTAL_FHE_OPS} FHE primitives. No plaintext. Every operation verified by ZKPoK.
         </motion.p>
       </div>
     </section>

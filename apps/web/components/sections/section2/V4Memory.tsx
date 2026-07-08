@@ -2,18 +2,19 @@
 
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
+import { TVS_BREAKDOWN } from '@/lib/snapshot'
 import { LayerHeader } from './V2Identity'
 
-const MEMORY_BODY = [
-  'name: specter',
-  'iNFT: 0x9e71...c84721 · token #1',
-  'created at block: 4,168,912',
+const TVS_LINES = [
+  'TVS: 66,400 USDC',
+  'vault: 12,500 USDC · 3 employees',
+  'disperse: 45,000 USDC · 24 recipients',
   '',
-  '## Origin',
-  'Spawned 2026-04-23 by elpabl0 to verify the',
-  'multi-agent ECIES message envelope. Now lives in',
-  'mainnet, talks to fox over AnimaInbox, takes',
-  'audit jobs from operators it has never met.',
+  '## Breakdown',
+  'Payroll vault balances are euint64 handles.',
+  'Distribution allocations are encrypted per-recipient.',
+  'Wrapped ERC-7984 balances tracked by totalSupply.',
+  'TVS computed from on-chain encrypted supply.',
 ]
 
 const HEX_GLYPHS = '0123456789abcdef·'
@@ -25,7 +26,7 @@ export function V4Memory() {
       className="relative flex min-h-screen items-center py-[var(--section-py)]"
     >
       <div className="mx-auto w-full max-w-[var(--container-wrap)] px-6 sm:px-8">
-        <LayerHeader idx="03" title="Memory" pill="0G Storage · iNFT slots" />
+        <LayerHeader idx="03" title="TVS" pill="Ethereum Sepolia · FHE encrypted supply" />
         <div className="grid items-center gap-12 lg:grid-cols-12">
           <div className="space-y-6 lg:col-span-5">
             <motion.h2
@@ -35,13 +36,13 @@ export function V4Memory() {
               transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
               className="font-display text-[clamp(36px,5vw,68px)] font-light leading-[1.04] tracking-[-0.018em] text-[var(--color-ink)]"
             >
-              Memory <span className="font-italic-serif italic">encrypted</span>, then anchored.
+              Value <span className="font-italic-serif italic">shielded</span>, not hidden.
             </motion.h2>
             <p className="max-w-md text-[15px] leading-relaxed text-[var(--color-ink-2)]">
-              Memory is plain markdown on disk, encrypted to a key derived from the agent's own
-              private key, written as a blob to 0G Storage, then anchored to the iNFT's
-              IntelligentData slot via on-chain hash. Public only to the operator, public forever to
-              the chain.
+              Total Value Shielded tracks every encrypted dollar across all Anima surfaces.
+              Payroll vault balances, pending distribution allocations, and wrapped ERC-7984
+              positions — all counted via on-chain totalEncryptedSupply. No decryption needed.
+              The aggregate is public. The details stay private.
             </p>
           </div>
           <div className="lg:col-span-7">
@@ -81,34 +82,35 @@ function FileCard() {
         style={{ boxShadow: 'var(--shadow-doc-asym)' }}
       >
         <div className="font-mono mb-3 flex items-center justify-between text-[10.5px] tracking-[0.04em] text-[var(--color-ink-3)]">
-          <span>/agent/identity.md</span>
+          <span>/tvs/dashboard</span>
           <span className="rounded-full border border-[var(--color-border)] bg-[var(--color-cream-warm)] px-2 py-0.5 text-[9px] tracking-[0.04em] text-[var(--color-ink-2)]">
-            Encrypted
+            Aggregate only
           </span>
         </div>
 
         <pre className="font-mono mb-4 whitespace-pre-wrap break-words text-[12px] leading-[1.65] text-[var(--color-ink)]">
-          {MEMORY_BODY.map((line, i) => (
+          {TVS_LINES.map((line, i) => (
             <ScrambleLine key={i} line={line} scrambled={scrambled} />
           ))}
         </pre>
 
         <div className="space-y-1.5 border-t border-[var(--color-border)] pt-3 text-[11.5px]">
-          <Row label="Encryption" value="HKDF-SHA256(privkey,'memory-key/v1') · AES-256-GCM" />
-          <Row label="Storage Root" value="0xa8b3…4e92" />
-          <Row label="Slot · memory-index" value="anchored at tx 0x771a…c8e0" />
+          <Row label="Total TVS" value="66,400 USDC" />
+          <Row label="Payroll Vault" value="12,500 USDC" />
+          <Row label="Distributions" value="45,000 USDC" />
+          <Row label="Wrapped Balances" value="8,900 USDC" />
         </div>
       </div>
 
       <p className="mt-5 text-center text-[13px] text-[var(--color-ink-2)]">
-        private. encrypted. anchored.{' '}
+        aggregate public. details encrypted.{' '}
         <a
-          href="https://indexer-storage-turbo.0g.ai"
+          href="https://sepolia.etherscan.io"
           target="_blank"
           rel="noreferrer"
           className="text-[var(--color-ink)] underline-offset-2 hover:underline"
         >
-          verify on indexer ↗
+          verify on Etherscan ↗
         </a>
       </p>
     </motion.div>

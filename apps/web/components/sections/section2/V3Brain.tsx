@@ -1,5 +1,6 @@
 'use client'
 
+import { CONTRACTS, addressUrl } from '@/lib/chainscan'
 import { motion } from 'framer-motion'
 import { LayerHeader } from './V2Identity'
 
@@ -10,7 +11,7 @@ export function V3Brain() {
       className="relative flex min-h-screen items-center py-[var(--section-py)]"
     >
       <div className="mx-auto w-full max-w-[var(--container-wrap)] px-6 sm:px-8">
-        <LayerHeader idx="02" title="Brain" pill="0G Compute · TeeML" />
+        <LayerHeader idx="02" title="Co-processor" pill="Ethereum Sepolia · Zama FHEVM" />
         <div className="grid items-center gap-12 lg:grid-cols-12">
           <div className="lg:col-span-7 lg:order-1">
             <EnclaveCard />
@@ -23,12 +24,13 @@ export function V3Brain() {
               transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
               className="font-display text-[clamp(36px,5vw,68px)] font-light leading-[1.04] tracking-[-0.018em] text-[var(--color-ink)]"
             >
-              Reasoning <span className="font-italic-serif italic">attested</span>, not trusted.
+              Computation <span className="font-italic-serif italic">encrypted</span>, not exposed.
             </motion.h2>
             <p className="max-w-md text-[15px] leading-relaxed text-[var(--color-ink-2)]">
-              Every turn runs inside a TeeML enclave on 0G Compute. The agent gets back not just the
-              answer but a signed receipt , proof the inference happened on the model the brain
-              claimed to use, with the prompt the brain claimed to send.
+              Zama FHEVM co-processor sits alongside the EVM on Sepolia. Every FHE operation —
+              add, sub, lte, select — runs homomorphically. The EVM never sees plaintext values.
+              The ZKPoK binds every encrypted input to the sender, preventing replay and
+              cross-contract attacks.
             </p>
           </div>
         </div>
@@ -55,41 +57,41 @@ function EnclaveCard() {
         }}
       >
         <div className="font-mono mb-2 flex items-center justify-between text-[10.5px] tracking-[0.04em] text-[var(--color-ink-3)]">
-          <span>TEE Enclave · Attestation</span>
+          <span>FHE Co-processor · Attested</span>
           <Checkmark />
         </div>
         <div className="font-display text-[24px] leading-tight text-[var(--color-ink)]">
-          glm-5-fp8
+          Zama FHEVM v0.8
         </div>
         <div className="font-mono mt-1 text-[12px] text-[var(--color-ink-2)]">
-          744B params · MoE · #1 open-source on AAI
+          euint64 · ebool · configured for Sepolia (chainId 11155111)
         </div>
 
         <div className="mt-5 space-y-2 border-y border-[var(--color-border)] py-4 text-[12px]">
-          <Row label="Signer" value="0x96fe…3e25" />
-          <Row label="Sig Hash" value="0xf2c9…78d4" />
-          <Row label="TEE Mode" value="TeeML · attested" />
-          <Row label="Provider" value="0g-serving-broker v0.7.5" />
+          <Row label="ACL Address" value="0xf0Ff…433D" />
+          <Row label="Coprocessor" value="0x92C9…c127" />
+          <Row label="KMS Verifier" value="0xbE0E…311A" />
+          <Row label="Protocol" value="FHE.fromExternal + ZKPoK" />
         </div>
 
         <div className="font-mono mt-4 flex items-baseline justify-between text-[11.5px] text-[var(--color-ink-3)]">
-          <span className="tracking-[0.04em]">This Turn</span>
+          <span className="tracking-[0.04em]">Operation</span>
           <span>
-            <span className="text-[var(--color-ink)]">0.0059</span> 0G · envelope{' '}
-            <span className="text-[var(--color-ink)]">4.23</span> 0G
+            <span className="text-[var(--color-ink)]">~350,000</span> gas · protocol ID{' '}
+            <span className="text-[var(--color-ink)]">10001</span>
           </span>
         </div>
       </div>
 
       <p className="mt-5 text-center text-[13px] text-[var(--color-ink-2)]">
-        every thought signed inside a TEE.{' '}
+        all computation runs encrypted.{' '}
         <a
-          href="https://chainscan.0g.ai"
+          href={addressUrl(CONTRACTS.AnimaPayroll)}
           target="_blank"
           rel="noreferrer"
           className="text-[var(--color-ink)] underline-offset-2 hover:underline"
         >
-          verify on chainscan ↗
+          verify on Etherscan ↗
         </a>
       </p>
     </motion.div>

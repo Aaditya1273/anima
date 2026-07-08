@@ -1,3 +1,6 @@
+// Section 2 · Confidential finance layers
+// Payroll / Co-processor / TVS / FHE Ops / Transfers / Dashboard
+
 import { V1Opener } from './section2/V1Opener'
 import { V2Identity } from './section2/V2Identity'
 import { V3Brain } from './section2/V3Brain'

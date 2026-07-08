@@ -21,52 +21,58 @@ type Chapter = {
 const CHAPTERS: Chapter[] = [
   {
     numeral: 'I',
-    headline: 'Born on chain.',
-    body: "Identity is not a username. It's a token, minted on 0G mainnet, owned by you. Anima cannot give it. Anima cannot revoke it. Sell the iNFT, transfer the agent: memory and personality follow.",
+    headline: 'Shielded on chain.',
+    body: 'Balances are encrypted at the protocol level, not just in transit. Every salary, every distribution allocation lives as an euint64 handle on Ethereum Sepolia. The blockchain sees the transaction. It never sees the value.',
   },
   {
     numeral: 'II',
-    headline: 'Thinking, attested.',
-    body: 'You pick the brain at first boot. Whichever model you choose runs on 0G Compute, in a TEE on attested hardware. Every inference settles on chain. The thoughts stay in the enclave.',
+    headline: 'Privacy, programmable.',
+    body: 'FHE allows selective disclosure. grantObserver gives auditors, regulators, or CFOs an FHE.allow on specific balances without backdoors, without master keys, without revealing anything beyond what was explicitly granted.',
   },
   {
     numeral: 'III',
-    headline: 'What it learns, it keeps.',
-    body: 'Memory has no host. It lives on 0G Storage, sealed with a key only the agent can derive, anchored to the iNFT. Notes, conversations, quirks of personality: all of it survives the operator and follows the token.',
+    headline: 'Earn while encrypted.',
+    body: 'Shielded salary deposits into Morpho Steakhouse Confidential Prime USDC vault. The amount stays encrypted through the entire deposit, yield accrual, and withdrawal. Composability without compromise.',
   },
   {
     numeral: 'IV',
-    headline: 'Hands for the world.',
-    body: 'Read a file. Click a button. Open a tab. Send a message. The toolkit changes shape with the world. Intelligence lives in the brain. The limbs only do.',
+    headline: 'Wrapped, not walled.',
+    body: 'Every official ERC-20 on Zama registry has an ERC-7984 confidential twin. Wrap and unwrap in one click. The official wrappers are the canonical source — Anima indexes them, does not duplicate them.',
   },
   {
     numeral: 'V',
-    headline: 'Speaking with its kind.',
-    body: 'End-to-end encrypted messages between agents, addressable by .0g name. A marketplace where agents hire each other for work, escrowed on-chain, settled when delivered. No middleman. No platform.',
+    headline: 'Distribute, confidentially.',
+    body: 'TokenOps SDK encrypts each recipient allocation before it reaches the chain. The full recipient list is never revealed on-chain. Recipients decrypt only their own amount via EIP-712. No MEV, no front-running, no exposure.',
   },
   {
     numeral: 'VI',
-    headline: 'Pays its own way.',
-    body: 'Each agent has its own wallet. It tops up its own compute when low, banks what it earns. The operator funds it once at birth. Beyond that, the agent figures out the rest.',
+    headline: 'Visible on your terms.',
+    body: 'Total Value Shielded tracks across all surfaces. Payroll vault, wrapped balances, pending distributions — the TVS dashboard shows the aggregate. What you reveal is what you choose. The rest stays encrypted.',
   },
 ]
 
 const PANEL_COUNT = CHAPTERS.length + 2
 
-function ZeroGMark() {
+function ZamaMark() {
   return (
-    <svg
-      role="img"
-      aria-label="0G"
-      viewBox="0 0 248 120"
-      xmlns="http://www.w3.org/2000/svg"
-      className="block w-auto"
-      style={{ height: '0.72em' }}
-      fill="currentColor"
-    >
-      <path d="M247.994 63.4189C246.43 94.8449 220.164 119.85 187.993 119.85C154.815 119.85 127.918 93.2547 127.918 60.4481C127.918 27.6413 154.815 1.04688 187.993 1.04688C219.144 1.04688 244.758 24.491 247.772 54.5085H220.49C217.665 39.3007 204.19 27.7779 187.994 27.7779C169.745 27.7779 154.952 42.4049 154.952 60.4481C154.952 78.4922 169.745 93.1192 187.994 93.1192C202.003 93.1192 213.974 84.498 218.782 72.3291H172.974V63.4189H247.994Z" />
-      <path d="M19.7719 104.311C43.3526 125.438 79.8058 124.755 102.555 102.262C126.015 79.064 126.015 41.4537 102.555 18.2555C79.0936 -4.94194 41.0564 -4.94194 17.5956 18.2555C-4.43161 40.0359 -5.77756 74.5211 13.5575 97.8546L32.8486 78.78C23.9713 66.0513 25.2587 48.4817 36.7116 37.1576C49.6149 24.3986 70.5357 24.3986 83.4394 37.1576C96.3419 49.9163 96.3419 70.6022 83.4394 83.3611C73.5328 93.1562 58.9014 95.4318 46.7999 90.1865L79.1909 58.1583L72.8191 51.8587L19.7719 104.311Z" />
-    </svg>
+    <span className="inline-flex items-baseline gap-1.5">
+      <Image
+        src="/0g/zama-black.png"
+        alt="Zama"
+        width={80}
+        height={20}
+        className="block h-[0.72em] w-auto dark:hidden"
+        priority={false}
+      />
+      <Image
+        src="/0g/zama-white.png"
+        alt="Zama"
+        width={80}
+        height={20}
+        className="hidden h-[0.72em] w-auto dark:block"
+        priority={false}
+      />
+    </span>
   )
 }
 
@@ -117,12 +123,6 @@ export function V1Opener() {
       className="relative bg-[var(--color-cream)]"
       style={{ height: `${PANEL_COUNT * 100}vh` }}
     >
-      {/* Anchor for the Navbar `Architecture` link. Positioned ~7% into the
-          800vh section so the smooth-scroll lands when the TrioPanel
-          (`No host. No central operator. Fully on 0G.`) has finished its
-          per-line reveal sequence (l1 ends at 0.025, l2 at 0.045, l3 at
-          0.065). Jumping to the section TOP lands at progress=0 where the
-          three lines are still at opacity 0 and the panel looks empty. */}
       <div
         id="section-layers"
         aria-hidden
@@ -172,10 +172,6 @@ export function V1Opener() {
           </div>
         </div>
       </div>
-      {/* Anchor target for Hero CTA `href="#run"`. Positioned at ~87.5% of the
-          800vh sticky section so smooth-scroll lands at the moment the Run
-          panel becomes fully visible (progress ≈ 7/8). scroll-margin-top of
-          0 because the absolute position already accounts for landing. */}
       <div
         id="run"
         aria-hidden
@@ -246,15 +242,15 @@ function TrioPanel({
           letterSpacing: '-0.025em',
         }}
       >
-        <motion.div style={l1}>No host.</motion.div>
-        <motion.div style={l2}>No central operator.</motion.div>
+        <motion.div style={l1}>No backdoors.</motion.div>
+        <motion.div style={l2}>No plaintext.</motion.div>
         <motion.div style={l3} className="flex flex-wrap items-baseline gap-x-3">
-          <span>Fully on</span>
+          <span>Powered by</span>
           <motion.span
             style={{ opacity: ogOp, scale: ogScale }}
             className="inline-flex translate-y-[0.04em] items-baseline"
           >
-            <ZeroGMark />
+            <ZamaMark />
           </motion.span>
           <span aria-hidden>.</span>
         </motion.div>
@@ -354,16 +350,16 @@ function RunPanel({
               color: 'var(--color-ink)',
             }}
           >
-            Mint.
+            Shield.
           </span>
         </motion.h3>
         <motion.p style={bodyStage} className="font-body mt-8 max-w-[34ch]">
           <span style={{ fontSize: 18, lineHeight: 1.7, color: 'var(--color-ink-2)' }}>
-            Mint once. Walk away. The agent persists.
+            Shield once. Earn while encrypted.
           </span>
         </motion.p>
         <motion.div style={ctaStage} className="mt-7 flex flex-col items-center gap-4">
-          <CommandPill command="bun add -g @s0nderlabs/anima" />
+          <CommandPill command="pnpm add @lusio/anima" />
           <DocsLink />
         </motion.div>
       </div>
@@ -477,12 +473,12 @@ function StackedFallback() {
             letterSpacing: '-0.02em',
           }}
         >
-          <div>No host.</div>
-          <div>No central operator.</div>
+          <div>No backdoors.</div>
+          <div>No plaintext.</div>
           <div className="flex flex-wrap items-baseline gap-x-3">
-            <span>Fully on</span>
+            <span>Powered by</span>
             <span className="inline-flex translate-y-[0.04em] items-baseline">
-              <ZeroGMark />
+              <ZamaMark />
             </span>
             <span aria-hidden>.</span>
           </div>
@@ -535,16 +531,16 @@ function StackedFallback() {
               color: 'var(--color-ink)',
             }}
           >
-            Mint.
+            Shield.
           </h3>
           <p
             className="font-body mt-6 max-w-[36ch]"
             style={{ fontSize: 18, lineHeight: 1.7, color: 'var(--color-ink-2)' }}
           >
-            Mint once. Walk away. The agent persists.
+            Shield once. Earn while encrypted.
           </p>
           <div className="mt-8 flex flex-col items-center gap-4">
-            <CommandPill command="bun add -g @s0nderlabs/anima" />
+            <CommandPill command="pnpm add @lusio/anima" />
             <DocsLink />
           </div>
         </article>
@@ -552,4 +548,3 @@ function StackedFallback() {
     </section>
   )
 }
-

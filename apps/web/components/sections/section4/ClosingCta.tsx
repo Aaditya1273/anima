@@ -27,12 +27,12 @@ export function ClosingCta() {
       />
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-[var(--color-cream-warm)]/60 via-transparent to-[var(--color-cream-warm)]/80" />
 
-      <span className="kicker mx-auto justify-center">Finis · Chapter IV</span>
+      <span className="kicker mx-auto justify-center">Finis</span>
       <h2 className="font-display mt-6 text-[clamp(40px,6vw,84px)] font-light leading-[0.98] tracking-[-0.02em] text-[var(--color-ink)]">
-        Run a <span className="font-italic-serif italic">sovereign</span> agent.
+        Send <span className="font-italic-serif italic">confidentially</span>.
       </h2>
       <p className="mt-5 max-w-md mx-auto text-[16px] leading-relaxed text-[var(--color-ink-2)]">
-        Mint once. Anima keeps running.
+        Shield once. Earn while encrypted.
       </p>
 
       <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -40,7 +40,7 @@ export function ClosingCta() {
           href="/console"
           className="group inline-flex items-center gap-2 rounded-full bg-[var(--color-ink)] px-7 py-3.5 text-[15px] font-medium tracking-tight text-[var(--color-cream)] shadow-[0_18px_40px_-22px_rgba(26,20,16,0.7)] transition-transform hover:-translate-y-0.5 hover:scale-[1.01] active:scale-[0.99]"
         >
-          <span>Run an agent</span>
+          <span>Open console</span>
           <span aria-hidden className="transition-transform group-hover:translate-x-1">
             →
           </span>
