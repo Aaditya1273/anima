@@ -12,9 +12,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 const NAV_ITEMS = [
-  { label: 'Payroll', href: '/payroll' },
-  { label: 'Registry', href: '/registry' },
-  { label: 'Disperse', href: '/disperse' },
+  { label: 'Architecture', href: '#section-layers' },
   { label: 'Docs', href: '/docs' },
 ]
 

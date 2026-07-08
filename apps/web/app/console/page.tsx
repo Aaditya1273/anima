@@ -1,8 +1,8 @@
 'use client'
 
 import { useSiwe } from '@/components/SiweContext'
+import { AgentList } from '@/components/console/AgentList'
 import { ConnectGate } from '@/components/console/ConnectGate'
-import { TvsDashboard } from '@/components/console/TvsDashboard'
 import { motion } from 'framer-motion'
 
 const REVEAL_EASE = [0.22, 1, 0.36, 1] as const
@@ -13,6 +13,8 @@ export default function ConsoleHome() {
   return (
     <div className="mx-auto w-full max-w-[var(--container-wrap)] px-6 pb-32 pt-28 sm:px-8 sm:pt-32">
       {siwe.status === 'loading' ? (
+        // Holds layout while /api/auth/me resolves so the connect gate
+        // doesn't flash for already-authed operators on hard refresh.
         <div className="min-h-[60vh]" aria-hidden />
       ) : siwe.status === 'authenticated' ? (
         <>
@@ -27,19 +29,10 @@ export default function ConsoleHome() {
                 fontVariationSettings: '"opsz" 96, "SOFT" 30, "WONK" 0',
               }}
             >
-              Console
+              Your agents.
             </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.15, ease: REVEAL_EASE }}
-              className="text-base text-[var(--color-ink-2)]"
-            >
-              Manage your confidential payroll, registry positions, and distributions.
-            </motion.p>
           </header>
-
-          <TvsDashboard />
+          <AgentList />
         </>
       ) : (
         <div className="grid min-h-[60vh] place-items-center">

@@ -14,23 +14,21 @@ const PILL_DARK =
 const PILL_GHOST =
   'inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border-strong)] bg-[var(--color-cream)] px-5 py-2.5 text-[13.5px] font-medium tracking-tight text-[var(--color-ink)] transition-transform hover:-translate-y-0.5 hover:scale-[1.01] active:scale-[0.99]'
 
-const NAV_LINKS = [
-  { label: 'Payroll', href: '/payroll' },
-  { label: 'Registry', href: '/registry' },
-  { label: 'Disperse', href: '/disperse' },
-  { label: 'Docs', href: '/docs' },
-]
-
 export function ConsoleNavbar() {
   const { openConnectModal } = useConnectModal()
   const { isConnected, address } = useAccount()
   const siwe = useSiwe()
   const [confirmDisconnect, setConfirmDisconnect] = useState(false)
+  // The chat-first console shell (/console/<id>/chat) is full-bleed and carries
+  // its own minimal chrome (wordmark + operator pill in the rail), so the global
+  // console navbar is suppressed there.
   const pathname = usePathname()
   if (pathname && /^\/console\/[^/]+\/chat\/?$/.test(pathname)) return null
 
   let right: React.ReactNode
   if (siwe.status === 'loading') {
+    // Invisible placeholder so the navbar doesn't flash "Connect" while
+    // /api/auth/me is in flight on hard refresh for already-authed operators.
     right = (
       <span aria-hidden className={`${PILL_DARK} pointer-events-none invisible`}>
         Connect <span aria-hidden>→</span>
@@ -76,21 +74,55 @@ export function ConsoleNavbar() {
             className="font-wordmark text-[24px] leading-none tracking-[-0.02em] text-[var(--color-ink)]"
             aria-label="anima home"
           >
-            anima
-            <span className="hidden text-[var(--color-ink-3)] sm:inline"> · confidential finance</span>
+            anima<span className="hidden text-[var(--color-ink-3)] sm:inline"> · console</span>
           </Link>
           <nav className="hidden items-center gap-7 md:flex">
-            {NAV_LINKS.map(item => (
+            <Link
+              href="/#section-layers"
+              className="text-[14px] font-medium tracking-[-0.005em] text-[var(--color-ink)] transition-colors duration-200 hover:text-[var(--color-ink-2)]"
+            >
+              Architecture
+            </Link>
+            <Link
+              href="/docs"
+              className="text-[14px] font-medium tracking-[-0.005em] text-[var(--color-ink)] transition-colors duration-200 hover:text-[var(--color-ink-2)]"
+            >
+              Docs
+            </Link>
+            {siwe.status === 'authenticated' ? (
               <Link
-                key={item.label}
-                href={item.href}
-                className="text-[14px] font-medium tracking-[-0.005em] text-[var(--color-ink)] transition-colors duration-200 hover:text-[var(--color-ink-2)]"
+                href="/console/chat"
+                aria-label="Chat (new feature)"
+                className="group inline-flex items-baseline gap-1 rounded-full bg-[color-mix(in_oklab,var(--color-ink)_7%,transparent)] py-1.5 pl-3.5 pr-2.5 text-[14px] font-medium tracking-[-0.005em] text-[var(--color-ink)] transition-colors duration-200 hover:bg-[color-mix(in_oklab,var(--color-ink)_10%,transparent)] hover:text-[var(--color-ink-2)]"
               >
-                {item.label}
+                Chat
+                <span
+                  className="font-italic-serif relative -top-[6px] text-[10.5px] italic leading-none text-[var(--color-ink-3)] transition-colors duration-200 group-hover:text-[var(--color-ink-2)]"
+                  aria-hidden
+                >
+                  new
+                </span>
               </Link>
-            ))}
+            ) : null}
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
+            {/* Mobile-only chat entry — the center nav (with the beside-Docs
+                Chat link) is hidden below md, so phones reach chat from here. */}
+            {siwe.status === 'authenticated' && siwe.address ? (
+              <Link
+                href="/console/chat"
+                aria-label="Chat (new feature)"
+                className="group inline-flex items-baseline gap-1 rounded-full bg-[color-mix(in_oklab,var(--color-ink)_7%,transparent)] py-1.5 pl-3 pr-2.5 text-[13px] font-medium tracking-[-0.005em] text-[var(--color-ink)] transition-colors active:bg-[color-mix(in_oklab,var(--color-ink)_10%,transparent)] md:hidden"
+              >
+                Chat
+                <span
+                  className="font-italic-serif relative -top-[5px] text-[10px] italic leading-none text-[var(--color-ink-3)]"
+                  aria-hidden
+                >
+                  new
+                </span>
+              </Link>
+            ) : null}
             {right}
           </div>
         </div>
@@ -159,7 +191,8 @@ function DisconnectDialog({
           Disconnect this wallet?
         </h2>
         <p className="font-body mt-3 max-w-[42ch] text-[14.5px] leading-[1.6] text-[var(--color-ink-2)]">
-          You'll need to connect and sign again to see your agents.
+          You'll need to connect and sign again to see your agents. Decrypted memory in this tab is
+          cleared.
         </p>
         <p className="font-mono mt-5 text-[13px] text-[var(--color-ink-3)]">
           {shortAddress(address, 6, 4)}

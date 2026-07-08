@@ -3,20 +3,22 @@ import { CONTRACTS, addressUrl, truncate } from '@/lib/chainscan'
 import Link from 'next/link'
 
 const PROJECT_LINKS = [
-  { label: 'GitHub', href: 'https://github.com/s0nderlabs/anima', external: true },
-  { label: 'README', href: 'https://github.com/s0nderlabs/anima#readme', external: true },
-  { label: 'Zama Docs', href: 'https://docs.zama.ai', external: true },
+  { label: 'GitHub', href: 'https://github.com/Aaditya1273/anima', external: true },
+  { label: 'README', href: 'https://github.com/Aaditya1273/anima#readme', external: true },
+  { label: 'Releases', href: 'https://github.com/Aaditya1273/anima/releases', external: true },
 ]
 
-const COMMUNITY_LINKS = [
-  { label: '@s0nderlabs', href: 'https://x.com/s0nderlabs', external: true },
-  { label: 'Zama Discord', href: 'https://discord.com/invite/zama', external: true },
-]
+const COMMUNITY_LINKS = [{ label: '@Aaditya1273', href: 'https://x.com/Aaditya1273', external: true }]
 
 const ON_CHAIN: Array<{ name: string; address: string; label: string }> = [
-  { name: 'AnimaPayroll', address: CONTRACTS.AnimaPayroll, label: 'FHE payroll vault · Builder Track' },
-  { name: 'AnimaRegistryRouter', address: CONTRACTS.AnimaRegistryRouter, label: 'Wrapper registry · Bounty Track' },
-  { name: 'AnimaDisperse', address: CONTRACTS.AnimaDisperse, label: 'Confidential distribution · TokenOps' },
+  { name: 'AnimaAgentNFT', address: CONTRACTS.AnimaAgentNFT, label: 'iNFT registry · ERC-7857' },
+  { name: 'AnimaInbox', address: CONTRACTS.AnimaInbox, label: 'A2A messaging · ECIES' },
+  { name: 'AnimaMarket', address: CONTRACTS.AnimaMarket, label: 'job marketplace · ERC-8183' },
+  {
+    name: 'Subname Registrar',
+    address: CONTRACTS.SubnameRegistrar,
+    label: '.anima.0g registrar',
+  },
 ]
 
 export function Footer() {
@@ -32,8 +34,8 @@ export function Footer() {
               anima
             </Link>
             <p className="mt-4 max-w-xs text-[14px] leading-relaxed text-[var(--color-ink-2)]">
-              Programmable confidential finance — FHE payroll, compliant shielding, and confidential
-              distributions on Ethereum Sepolia. Submitted to Zama Developer Program Season 3.
+              First fully on-chain sovereign agent harness. Identity, brain, memory, limbs, comms,
+              and economy live on 0G.
             </p>
           </div>
 
@@ -45,7 +47,7 @@ export function Footer() {
             ))}
           </FooterColumn>
 
-          <FooterColumn label="Verify on Sepolia" className="md:col-span-3">
+          <FooterColumn label="Verify on Chain" className="md:col-span-3">
             {ON_CHAIN.map(item => (
               <a
                 key={item.name}
@@ -78,7 +80,7 @@ export function Footer() {
 
         <div className="mt-10 flex flex-col gap-6 border-t border-[var(--color-border)] pt-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="font-mono text-[12px] text-[var(--color-ink-3)]">
-            © 2026 · Built by s0nderlabs for Zama Developer Program Season 3
+            © 2026 · Built by s0nderlabs
           </div>
           <ThemeToggle />
         </div>
