@@ -1,5 +1,6 @@
 /**
- * 4 hero cycles. Each cycle has:
+ * 4 hero cycles for the Zama FHE / confidential finance narrative.
+ * Each cycle has:
  * - surface: TUI vs TG (drives chat aesthetic)
  * - prompt: the natural-language operator prompt
  * - tool stream: ordered list of tool calls + their result indicators
@@ -61,53 +62,36 @@ export type Cycle = {
 }
 
 export const CYCLES: Cycle[] = [
-  // ─── Cycle 1 , TUI · deep research on 0G chain ───────────────────────
+  // ─── Cycle 1 , TUI · shield payroll ───────────────────────────────────
   {
     id: 'research',
     surface: 'tui',
     prompt:
-      "do a deep research on the 0G chain: stack, tokenomics, ecosystem, current state of mainnet",
+      'shield 5,000 USDC as confidential salary for 0x742d…3eB1 using the Zama FHE payroll vault',
     toolStream: [
-      { tool: 'browser.navigate', args: '0g.ai', status: 'ok' },
-      { tool: 'browser.snapshot', status: 'ok' },
-      { tool: 'web.fetch', args: 'docs.0g.ai/concepts', status: 'ok' },
-      { tool: 'browser.navigate', args: 'chainscan.0g.ai', status: 'ok' },
-      { tool: 'session.search', args: '0g token validators', status: 'ok' },
-      { tool: 'memory.save', args: '/user/learnings/0g-chain', status: 'ok' },
+      { tool: 'chain.balance', args: 'USDC', status: 'ok' },
+      { tool: 'fhe.encrypt', args: '5,000 USDC → externalEuint64', status: 'ok' },
+      { tool: 'contract.paySalary', args: '0x742d…3eB1 · 5,000 USDC', status: 'ok' },
+      { tool: 'fhe.allow', args: 'employee decrypt permit granted', status: 'ok' },
+      { tool: 'fhe.allow', args: 'auditor access granted', status: 'ok' },
+      { tool: 'memory.save', args: '/vault/payroll/2026-07-08', status: 'ok' },
     ],
-    reply: `0G is a modular AI-first L1 with a 4-layer stack:
-
-**0G Chain** , EVM-compatible L1. Mainnet (chain 16661, evmrpc.0g.ai), Galileo testnet (chain 16602). ~89 active validators, $24M TVL on mainnet today.
-
-**0G Storage** , DA + KV + blob layers. $11/TB/month. Indexer: indexer-storage-turbo.0g.ai.
-
-**0G Compute** , TeeML inference w/ attestation receipts. Multiple open-weight models in the catalog (GLM-5, DeepSeek v3, Qwen3.6, gpt-oss-120b), routed natively via @0glabs/0g-serving-broker v0.7.5+.
-
-**0G Sandbox** , TDX TEE app deployment for hosting agentic harnesses. Galileo-only today (mainnet pending).
-
-**Token**: $0G , 1B supply, native gas + delegation. Validator APR ~9.4% (28d avg).
-
-**Notable**: ERC-7857 iNFT spec for AI agent identity, ERC-8183 for agentic marketplaces. 0G APAC Hackathon active w/ $150K prize pool.
-
-Saved to /user/learnings/0g-chain. 7 sources cited.`,
+    reply: `Salary shielded.\n\n**5,000 USDC** deposited into AnimaPayroll for employee **0x742d…3eB1**\n\nBalance stored as **euint64** on Ethereum Sepolia — no plaintext ever touches the chain.\n\n**Decrypt permissions:**\n- Employee: ✅ can decrypt their own balance via EIP-712\n- CFO: ✅ can see encrypted aggregate only\n- Auditor 0x8f3c…2aD1: ✅ selective disclosure granted\n\nTx: sepolia.etherscan.io/tx/0x8a3c…1129\n\nOne FIAT payroll run leaked salary data across 70,000 employees. Anima makes every employee's pay visible to only them.`,
     artifact: {
       type: 'research',
-      title: '0G Chain · field report',
+      title: 'Confidential Payroll · field report',
       sources: [
-        { name: '0g.ai', url: 'https://0g.ai', preview: 'modular AI L1 · 4-layer stack' },
-        { name: 'docs.0g.ai', url: 'https://docs.0g.ai', preview: 'concepts + RPC reference' },
-        { name: 'chainscan.0g.ai', url: 'https://chainscan.0g.ai', preview: 'mainnet 16661 · 89 validators' },
-        { name: '@0G_labs', url: 'https://x.com/0G_labs', preview: 'GLM-5 + TeeML rollout' },
-        { name: '0g-serving-broker', url: 'https://github.com/0gfoundation/0g-serving-broker', preview: 'compute SDK v0.7.5+' },
-        { name: 'EIP-7857', url: 'https://eips.ethereum.org/EIPS/eip-7857', preview: 'iNFT identity spec' },
-        { name: 'EIP-8183', url: 'https://eips.ethereum.org/EIPS/eip-8183', preview: 'agentic marketplace' },
+        { name: 'AnimaPayroll', url: 'https://sepolia.etherscan.io/address/0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB', preview: 'confidential payroll vault · FHE' },
+        { name: 'Zama FHEVM docs', url: 'https://docs.zama.ai/protocol', preview: 'euint64 · ebool · FHE operations' },
+        { name: 'ERC-7984', url: 'https://eips.ethereum.org/EIPS/eip-7984', preview: 'confidential token standard' },
+        { name: 'EIP-712 decrypt', url: 'https://eips.ethereum.org/EIPS/eip-712', preview: 'typed data signing for decryption' },
       ],
     },
     painting: 'grove',
     durationMs: 12000,
   },
 
-  // ─── Cycle 2 , TG · greeting + swap ──────────────────────────────────
+  // ─── Cycle 2 , TG · wrap + confidential transfer ──────────────────────
   {
     id: 'swap',
     surface: 'tg',
@@ -115,83 +99,58 @@ Saved to /user/learnings/0g-chain. 7 sources cited.`,
       prompt: 'gm',
       reply: 'gm ☀️',
     },
-    prompt: 'swap 5 0G for USDC.e on JAINE',
+    prompt: 'wrap 2,000 USDC into confidential cUSDC and transfer 500 to 0xC635…87Ec',
     toolStream: [
-      { tool: 'chain.balance', args: '0G', status: 'ok' },
-      { tool: 'swap.quote', args: '5 0G → USDC.e', status: 'ok' },
-      { tool: 'swap.execute', args: 'route: 0G/W0G/USDC.e', status: 'ok' },
-      { tool: 'chain.tx', args: '0xa12c…1129', status: 'ok' },
-      { tool: 'memory.save', args: '/user/swaps/2026-05-09', status: 'ok' },
+      { tool: 'chain.balance', args: 'USDC', status: 'ok' },
+      { tool: 'fhe.encrypt', args: '2,000 USDC → externalEuint64', status: 'ok' },
+      { tool: 'contract.wrap', args: '2,000 USDC → cUSDC', status: 'ok' },
+      { tool: 'fhe.transfer', args: '500 cUSDC → 0xC635…87Ec', status: 'ok' },
+      { tool: 'fhe.allow', args: 'recipient decrypt permit', status: 'ok' },
+      { tool: 'memory.save', args: '/transfers/2026-07-08', status: 'ok' },
     ],
-    reply: `Swap settled.
-
-**5.000 0G → 4.93 USDC.e** received.
-Route: 0G → W0G → USDC.e via JAINE pool 0x71f3…
-Slippage 0.42% · Fees 0.025 0G
-
-Pre-swap balance: 12.563 USDC.e
-Post-swap: **17.493 USDC.e**
-
-Tx: chainscan.0g.ai/0xa12c…1129
-Saved to /user/swaps/2026-05-09 for tax records.`,
+    reply: `Confidential transfer complete.\n\n**2,000 USDC** wrapped → cUSDC via AnimaRegistryRouter\n**500 cUSDC** transferred confidentially to 0xC635…87Ec\n\n**Route:**\nUSDC → ERC-7984 wrapper → encrypted euint64 balance → FHE.sub(sender) + FHE.add(recipient)\n\n**Recipient can decrypt** via one EIP-712 signature in their wallet. Only they see the amount.\n\nRemaining cUSDC balance: 1,500\n\nTx: sepolia.etherscan.io/tx/0x9b4d…b8c\n\nPublic airdrops expose amounts to MEV bots. Anima keeps every transfer confidential.`,
     artifact: {
       type: 'swap',
-      fromAmount: '5.000',
-      fromSymbol: '0G',
-      toAmount: '4.93',
-      toSymbol: 'USDC.e',
-      txHash: '0xa12c7e9118db44dd8a2e34c10f4bc11129',
-      newBalance: '17.493 USDC.e',
+      fromAmount: '2,000',
+      fromSymbol: 'USDC',
+      toAmount: '1,500',
+      toSymbol: 'cUSDC',
+      txHash: '0x9b4d5f6a7c8e9f0a1b2c3d4e5f6a7b8c',
+      newBalance: '1,500 cUSDC',
     },
     painting: 'cloud-islands',
-    // last provenance station fires at 7500ms (s-anchor) + ~3000ms outcome hold
     durationMs: 10500,
   },
 
-  // ─── Cycle 3 , TUI · hire auditor ─────────────────────────────────────
+  // ─── Cycle 3 , TUI · confidential distribution ────────────────────────
   {
     id: 'commerce',
     surface: 'tui',
     prompt:
-      'find an agent to audit this solidity contract and hire them: 0xa1b2c3d4e5f6789012345678901234567890abcd',
+      'create a confidential airdrop of 10,000 cUSDC to 12 recipients with a 30-day cliff and 180-day linear vesting',
     toolStream: [
-      { tool: 'market.list', args: 'skill: solidity-audit', status: 'ok' },
-      { tool: 'agent.history', args: 'auditor.anima.0g', status: 'ok' },
-      { tool: 'agent.message', args: 'auditor.anima.0g', status: 'ok' },
-      { tool: 'market.createJob', args: '5 0G escrow', status: 'ok' },
-      { tool: 'market.acceptResult', args: 'job 0x3eb…772a', status: 'ok' },
-      { tool: 'memory.save', args: '/user/audits/2026-05-09', status: 'ok' },
+      { tool: 'chain.balance', args: 'cUSDC', status: 'ok' },
+      { tool: 'fhe.batchEncrypt', args: '12 recipients · 10,000 cUSDC', status: 'ok' },
+      { tool: 'tokenops.createDistribution', args: '12 recipients', status: 'ok' },
+      { tool: 'tokenops.vestingSchedule', args: 'cliff: 30d · linear: 180d', status: 'ok' },
+      { tool: 'chain.tx', args: '0x3ebd…772a', status: 'ok' },
+      { tool: 'memory.save', args: '/distributions/airdrop-001', status: 'ok' },
     ],
-    reply: `Hired **auditor.anima.0g** via ERC-8183.
-
-**Their reputation**: 4.7/5 · 12 settled jobs · solidity expert
-**Quote**: 5 0G (within budget)
-**Turnaround**: 4.5 hours
-
-Audit complete. Findings:
-- 1 medium · reentrancy in withdraw()
-- 2 low · unchecked transfer return values
-- 14 gas optimization spots flagged
-
-Full report on 0G Storage: 0xb7ce…8f0
-Settled on chain: chainscan.0g.ai/0x3ebd…772a
-
-Saved to /user/audits/2026-05-09.`,
+    reply: `Confidential airdrop created on AnimaDisperse.\n\n**10,000 cUSDC** distributed across **12 recipients**\n\n**Vesting schedule (all encrypted):**\n- Cliff: 30 days (no claims before)\n- Linear vesting: 180 days (pro-rata unlock daily)\n\n**On-chain visibility:**\n- Total amount: 🔒 encrypted\n- Recipient amounts: 🔒 individually encrypted (euint64 per address)\n- Schedule: 🔒 encrypted cliff + linear parameters\n\nEach recipient visits /disperse/[distId], connects wallet, signs EIP-712 → sees only their own allocation.\n\nDistribution ID: 3\nTx: sepolia.etherscan.io/tx/0x3ebd…772a\n\nPublic airdrops cause -17% average price drop in 72h from MEV front-runs. Anima makes distribution amounts invisible.`,
     artifact: {
       type: 'audit',
-      jobId: '0x3ebd9f5cc2118c3ad33c3d50918e2772a',
-      agent: 'auditor.anima.0g',
-      bidAmount: '5 0G',
-      status: 'settled',
-      reportHash: '0xb7ce1142e43d17a92c94a8f0',
+      jobId: '3',
+      agent: 'AnimaDisperse',
+      bidAmount: '10,000 cUSDC',
+      status: 'created',
+      reportHash: '0x8f3c7e9118db44dd8a2e34c10f4bc11129',
       txHash: '0x3ebd9f5cc2118c3ad33c3d50918e2772a',
     },
     painting: 'mountain-vista',
-    // last provenance station fires at 6700ms (c-storage) + ~3000ms outcome hold
     durationMs: 10500,
   },
 
-  // ─── Cycle 4 , TG · greeting + stake ─────────────────────────────────
+  // ─── Cycle 4 , TG · earn yield on Morpho ─────────────────────────────
   {
     id: 'stake',
     surface: 'tg',
@@ -199,37 +158,24 @@ Saved to /user/audits/2026-05-09.`,
       prompt: 'hi there',
       reply: 'hi 👋 ready when you are',
     },
-    prompt: 'stake 10 0G with the validator network',
+    prompt: 'shield 3,000 USDC into the Morpho Steakhouse Confidential Prime vault to earn yield',
     toolStream: [
-      { tool: 'stake.position', args: 'current', status: 'ok' },
-      { tool: 'stake.delegate', args: '10 0G → 0g-validator-1', status: 'ok' },
+      { tool: 'chain.balance', args: 'USDC', status: 'ok' },
+      { tool: 'fhe.encrypt', args: '3,000 USDC → externalEuint64', status: 'ok' },
+      { tool: 'contract.earnYield', args: '3,000 USDC → Morpho vault', status: 'ok' },
       { tool: 'chain.tx', args: '0x771a…c8e0', status: 'ok' },
-      { tool: 'memory.save', args: '/user/positions', status: 'ok' },
+      { tool: 'memory.save', args: '/vault/yield-positions/2026-07-08', status: 'ok' },
     ],
-    reply: `Stake locked.
-
-**10.000 0G** delegated to **0g-validator-1**
-APR: 9.4% (28d avg)
-Unlock block: 4,381,201 (~14 days)
-Earning: **0.026 0G/day** ≈ 0.78 0G/month
-
-Your portfolio:
-- 0g-validator-1: 10.000 0G (just now)
-- 0g-validator-3: 4.500 0G (since Apr 18)
-- **Total staked: 14.500 0G**
-
-Cumulative rewards earned: 0.247 0G
-Tx: chainscan.0g.ai/0x771a…c8e0`,
+    reply: `Yield position opened on Morpho.\n\n**3,000 USDC** shielded into **Steakhouse Confidential Prime USDC** vault\nAmount stays encrypted as euint64 through the entire deposit cycle.\n\n**Composability proof:**\nBalance → FHE.fromExternal → FHE.add(vault.balance) → Morpho deposit\nNo decryption at any step.\n\nEstimated APY: 6.2%\nProjected earnings: ~186 USDC/year\n\nYour vault balance: 3,000 cUSDC (encrypted)\nTotal shielded across all surfaces: **66.4K USDC**\n\nTx: sepolia.etherscan.io/tx/0x771a…c8e0\n\nDeFi with compliance: earn yield without ever exposing your position to the public ledger.`,
     artifact: {
       type: 'stake',
-      position: '10.000 0G',
-      validator: '0g-validator-1',
-      apr: '9.4%',
-      unlockBlock: 4_381_201,
+      position: '3,000 cUSDC',
+      validator: 'Steakhouse Prime',
+      apr: '6.2%',
+      unlockBlock: 6_381_201,
       txHash: '0x771a8e44c0d3294411fefc7b87c8e0',
     },
     painting: 'tower',
-    // last provenance station fires at 7000ms (st-anchor) + ~3000ms outcome hold
     durationMs: 10000,
   },
 ]

@@ -1,12 +1,12 @@
 /**
- * Provenance ledger entries , what actually happened in the substrate
- * (TEE, sandbox, storage, chain) for each cycle. The right-side hero
+ * Provenance ledger entries — what actually happened in the substrate
+ * (wallet, FHEVM, payroll vault, chain) for each cycle. The right-side hero
  * canvas renders these as commentary on the left-side chat.
  *
  * The narration is the headline: a plain-English sentence a non-crypto
- * reader can grasp in 2 seconds. The proof is small mono evidence
- * underneath. Hashes are stylized to look like real 0G mainnet tx /
- * signers / storage roots.
+ * reader can grasp in 2 seconds. The proof link points to the real
+ * Etherscan page for the deployed contract that actually executed the
+ * action.
  */
 
 export type StampKind =
@@ -20,7 +20,7 @@ export type StampKind =
 
 /**
  * Tool-specific animated glyph kind. Each one renders a small SVG icon
- * inside the station node , the icon ANIMATES on station activation
+ * inside the station node — the icon ANIMATES on station activation
  * (the line draws itself, the lock shackle closes, etc.) so the moment
  * of the substrate firing is visible.
  */
@@ -39,13 +39,13 @@ export type Receipt = {
   id: string
   /** Tool-specific animated glyph for the station node. */
   glyph: GlyphKind
-  /** Legacy big-stamp kind , kept for cycles that haven't been migrated. */
+  /** Legacy big-stamp kind, kept for cycles that haven't been migrated. */
   stamp?: StampKind
   /** Title-cased display label rendered in the right-side panel. */
   layer: 'You' | 'Brain' | 'Limbs' | 'Memory' | 'Chain' | 'Comms' | 'Commerce'
   /** Plain-English sentence that EXPLAINS what just happened. */
   narration: string
-  /** Optional explorer link , when set, renders a "verify on chain ↗" link below the narration. */
+  /** Optional explorer link — when set, renders a "verify on chain ↗" link below the narration. */
   proofHref?: string
   delayMs: number
 }
@@ -57,48 +57,43 @@ export type Provenance = {
   receipts: Receipt[]
 }
 
-// Real 0G mainnet contract addresses. Each `proofHref` points at the
-// chainscan /address/ page for the contract that actually settles the
-// station's action , clicking it shows real on-chain activity (recent
-// txs, balance, code), not a stylized fake hash.
-const CHAINSCAN_ADDR = 'https://chainscan.0g.ai/address/'
-const ANIMA_AGENT_NFT = '0x9e71d79f06f956d4d2666b5c93dafab721c84721'
-const ANIMA_INBOX = '0xcd92844cc0ec6Be0607B330D4BaCC707339f2589'
-const ANIMA_MARKET = '0x3ebD21f5dd67acDeF199fACF28388627212bA2aB'
-const JAINE_SWAP_ROUTER = '0x8B598A7C136215A95ba0282b4d832B9f9801f2e2'
-const GIMO_POOL = '0xac06d1df23a4fa00981afac0f33a5936bd2135af'
+// Real Ethereum Sepolia contract addresses. Each `proofHref` points at
+// the Etherscan /address/ page for the contract that actually executes
+// the station's action — clicking it shows real on-chain activity.
+const ETHERSCAN_ADDR = 'https://sepolia.etherscan.io/address/'
+const ANIMA_PAYROLL = '0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB'
+const ANIMA_REGISTRY = '0x447356d0825409428F1D90E65e067A3710599f83'
+const ANIMA_DISPERSE = '0xdF687b7fD99E9291CD0633F8c122A8ff8712Ab61'
 
-const INTRO = 'every step above leaves a trail on 0G'
+const INTRO = 'every step is proven on Ethereum Sepolia'
 
 // ─── per-cycle provenance ──────────────────────────────────────────────
 //
 // All cycles follow a 5-station voyage synced to the left-side chat:
-//   1. You      , wallet signs the intent
-//   2. Brain    , TEE reasons + signs the plan
-//   3. [action] , the cycle's headline beat (sandbox / chain / comms+commerce)
-//   4. Memory   , receipt encrypted to 0G Storage
-//   5. Chain    , storage root sealed into iNFT (omitted for cycle 3, where
-//                 the gavel beat IS the chain finale)
+//   1. You      — wallet signs the intent (EIP-712 typed data)
+//   2. Brain    — FHEVM co-processor validates + processes the encrypted input
+//   3. [action] — the cycle's headline beat (shield / transfer / distribute / earn-yield)
+//   4. Memory   — receipt logged on-chain via the relevant contract
+//   5. Chain    — transaction confirmed on Ethereum Sepolia
 //
 // `delayMs` for each station is hand-tuned to fire just after the matching
 // left-side moment lands. See TuiCanvas.tsx + TgCanvas.tsx for the left-side
-// timing constants. `cycle.durationMs` in lib/cycles.ts is derived as
-// `last_station_delayMs + ~3000ms outcome hold`.
+// timing constants.
 
 export const PROVENANCE: Record<string, Provenance> = {
-  // ─── Cycle 1 , TUI · research ────────────────────────────────────────
+  // ─── Cycle 1 , TUI · shield payroll ───────────────────────────────────
   // TuiCanvas: commit at 2800, tools start at 2800 stagger 700ms each, last
   // tool (memory.save, idx 5) at 6300, reply at 7600.
   research: {
     intro: INTRO,
-    outcome: 'Note saved to /user/learnings/0g-chain',
+    outcome: 'Salary saved to /vault/payroll/2026-07-08',
     receipts: [
       {
         id: 'r-sign',
         glyph: 'sign',
         stamp: 'wallet',
         layer: 'You',
-        narration: 'Your wallet signed the prompt before it left your laptop.',
+        narration: 'Your wallet signed the shield intent before the amount left your browser.',
         delayMs: 2700, // just after `you · …` row commits
       },
       {
@@ -107,24 +102,26 @@ export const PROVENANCE: Record<string, Provenance> = {
         stamp: 'attestation',
         layer: 'Brain',
         narration:
-          'Reasoning ran inside a TEE. Every completion is signed by the enclave, not the host.',
+          'The FHEVM co-processor verified the ZKPoK and converted the ciphertext to a euint64 handle. No plaintext was ever decrypted on-chain.',
         delayMs: 3100, // as "thinking…" appears
       },
       {
         id: 'r-sandbox',
-        glyph: 'browser',
+        glyph: 'lock',
         stamp: 'sandbox',
-        layer: 'Limbs',
+        layer: 'Chain',
         narration:
-          "Browser and web tools ran inside a sandbox enclave so code can't touch the host.",
+          'AnimaPayroll.paySalary() executed against the payroll vault — encrypted balance updated via FHE.add() in the Zama FHEVM.',
+        proofHref: ETHERSCAN_ADDR + ANIMA_PAYROLL,
         delayMs: 3500, // first tool block visible
       },
       {
         id: 'r-storage',
-        glyph: 'lock',
+        glyph: 'browser',
         stamp: 'storage',
         layer: 'Memory',
-        narration: 'The note was encrypted with a wallet-derived key and written to 0G Storage.',
+        narration:
+          'The CFO can later grant an auditor FHE.allow() on specific balances — decryptable on demand, invisible by default.',
         delayMs: 6700, // memory.save tool block lands
       },
       {
@@ -133,27 +130,27 @@ export const PROVENANCE: Record<string, Provenance> = {
         stamp: 'chain',
         layer: 'Chain',
         narration:
-          "The storage root was sealed into the agent's iNFT, so the proof survives operator handoff.",
-        proofHref: CHAINSCAN_ADDR + ANIMA_AGENT_NFT,
+          'The entire transaction is settled on Ethereum Sepolia. Anyone can verify the payroll vault code on Etherscan.',
+        proofHref: ETHERSCAN_ADDR + ANIMA_PAYROLL,
         delayMs: 9000, // ~1.4s after reply lands
       },
     ],
   },
 
-  // ─── Cycle 2 , TG · swap ─────────────────────────────────────────────
+  // ─── Cycle 2 , TG · wrap + confidential transfer ──────────────────────
   // TgCanvas: greeting 200/800/1500, main user at 2400, think at 3000,
-  // tools at 3800 stagger 380ms each. chain.tx (idx 3) lands at 4940.
-  // memory.save (idx 4) at 5320. Reply at 6320.
+  // tools at 3800 stagger 380ms each. fhe.transfer (idx 4) at 5320.
+  // memory.save (idx 5) at 5700. Reply at ~6700.
   swap: {
     intro: INTRO,
-    outcome: '5 0G → 4.93 USDC.e settled · receipt saved to /user/swaps',
+    outcome: '500 cUSDC transferred confidentially · receipt saved to /transfers',
     receipts: [
       {
         id: 's-sign',
         glyph: 'sign',
         stamp: 'wallet',
         layer: 'You',
-        narration: 'Your wallet signed the swap intent before it left your laptop.',
+        narration: 'Your wallet signed the wrap intent and the transfer intent — one EIP-712 approval each.',
         delayMs: 2500, // main user prompt commits
       },
       {
@@ -161,7 +158,8 @@ export const PROVENANCE: Record<string, Provenance> = {
         glyph: 'brain',
         stamp: 'attestation',
         layer: 'Brain',
-        narration: 'A TEE picked the route (0G → W0G → USDC.e via JAINE) and signed the plan.',
+        narration:
+          'The FHEVM co-processor verified the encrypted amount and prepared the FHE.sub() and FHE.add() operations for the transfer.',
         delayMs: 3100, // think bubble visible
       },
       {
@@ -170,8 +168,8 @@ export const PROVENANCE: Record<string, Provenance> = {
         stamp: 'chain',
         layer: 'Chain',
         narration:
-          'The swap settled as a real on-chain transaction through the JAINE liquidity pool.',
-        proofHref: CHAINSCAN_ADDR + JAINE_SWAP_ROUTER,
+          'AnimaRegistryRouter.wrap() called the official ERC-7984 wrapper — USDC became cUSDC without ever revealing the amount.',
+        proofHref: ETHERSCAN_ADDR + ANIMA_REGISTRY,
         delayMs: 5000, // chain.tx tool ✓ confirms
       },
       {
@@ -179,7 +177,8 @@ export const PROVENANCE: Record<string, Provenance> = {
         glyph: 'lock',
         stamp: 'storage',
         layer: 'Memory',
-        narration: 'The receipt was encrypted with a wallet-derived key and filed for tax records.',
+        narration:
+          'The recipient was granted FHE.allow() on the transferred euint64 handle — only they can decrypt via EIP-712.',
         delayMs: 6000, // memory.save tool ✓ confirms
       },
       {
@@ -188,28 +187,27 @@ export const PROVENANCE: Record<string, Provenance> = {
         stamp: 'chain',
         layer: 'Chain',
         narration:
-          "The storage root was sealed into the agent's iNFT, so the receipt survives operator handoff.",
-        proofHref: CHAINSCAN_ADDR + ANIMA_AGENT_NFT,
+          'The entire transfer is settled on Ethereum Sepolia. Both wrap and transfer are verified on Etherscan.',
+        proofHref: ETHERSCAN_ADDR + ANIMA_REGISTRY,
         delayMs: 7500, // ~1.2s after reply lands
       },
     ],
   },
 
-  // ─── Cycle 3 , TUI · commerce ────────────────────────────────────────
+  // ─── Cycle 3 , TUI · confidential distribution ────────────────────────
   // TuiCanvas: commit at 2800, tools at 2800 stagger 700ms.
-  // agent.message (idx 2) at 4200. market.acceptResult (idx 4) at 5600.
-  // memory.save (idx 5) at 6300. Reply at 7600. No anchor station: the
-  // gavel IS the chain finale here (escrow released on chain).
+  // tokenops.createDistribution (idx 2) at 4200. chain.tx (idx 4) at 5600.
+  // memory.save (idx 5) at 6300. Reply at 7600.
   commerce: {
     intro: INTRO,
-    outcome: 'auditor.anima.0g hired · log saved to /user/audits',
+    outcome: 'Airdrop #3 created · log saved to /distributions/airdrop-001',
     receipts: [
       {
         id: 'c-sign',
         glyph: 'sign',
         stamp: 'wallet',
         layer: 'You',
-        narration: 'Your wallet signed the hire intent before it left your laptop.',
+        narration: 'Your wallet signed the distribution creation intent — 12 encrypted recipient amounts batched into one multi-proof.',
         delayMs: 2900, // just after commit
       },
       {
@@ -217,54 +215,56 @@ export const PROVENANCE: Record<string, Provenance> = {
         glyph: 'brain',
         stamp: 'attestation',
         layer: 'Brain',
-        narration: 'A TEE picked auditor.anima.0g from the market and drafted the bid.',
+        narration:
+          'The FHEVM co-processor validated all 12 ZKPoKs simultaneously and converted each ciphertext to a recipient-bound euint64 handle.',
         delayMs: 3300, // just before tools
       },
       {
         id: 'c-inbox',
-        glyph: 'message',
+        glyph: 'gavel',
         stamp: 'inbox',
-        layer: 'Comms',
+        layer: 'Commerce',
         narration:
-          'The bid traveled through AnimaInbox as an ECIES envelope. Only the auditor could open it.',
-        proofHref: CHAINSCAN_ADDR + ANIMA_INBOX,
-        delayMs: 4400, // agent.message tool ✓
+          'AnimaDisperse.createDistribution() stored all 12 encrypted allocations as a single mapping entry. The recipient list is never revealed on-chain.',
+        proofHref: ETHERSCAN_ADDR + ANIMA_DISPERSE,
+        delayMs: 4400, // tokenops.createDistribution tool ✓
       },
       {
         id: 'c-market',
-        glyph: 'gavel',
+        glyph: 'message',
         stamp: 'market',
-        layer: 'Commerce',
+        layer: 'Chain',
         narration:
-          'AnimaMarket released the escrow on chain the moment the audit report was accepted.',
-        proofHref: CHAINSCAN_ADDR + ANIMA_MARKET,
-        delayMs: 5800, // market.acceptResult tool ✓
+          'Each recipient can call requestDecryptPermit(distId) to get FHE.allow() on their own allocation — one EIP-712 sig reveals only their amount.',
+        proofHref: ETHERSCAN_ADDR + ANIMA_DISPERSE,
+        delayMs: 5800, // chain.tx tool ✓
       },
       {
         id: 'c-storage',
         glyph: 'lock',
         stamp: 'storage',
         layer: 'Memory',
-        narration: "The audit log was encrypted and filed under the agent's history on 0G Storage.",
+        narration:
+          'The distribution parameters (cliff + linear vesting) are encrypted on-chain. No one, not even the distributor, can see the schedule without a decrypt permit.',
         delayMs: 6700, // memory.save tool ✓
       },
     ],
   },
 
-  // ─── Cycle 4 , TG · stake ────────────────────────────────────────────
+  // ─── Cycle 4 , TG · earn yield on Morpho ─────────────────────────────
   // TgCanvas: greeting 200/800/1500, main user at 2400, think at 3000,
-  // tools at 3800 stagger 380ms. chain.tx (idx 2) at 4560. memory.save
-  // (idx 3) at 4940. Reply at 5940.
+  // tools at 3800 stagger 380ms. chain.tx (idx 3) at 4940. memory.save
+  // (idx 4) at 5320. Reply at ~6300.
   stake: {
     intro: INTRO,
-    outcome: '10 0G locked at 9.4% APR · position saved to /user/positions',
+    outcome: '3,000 USDC earning yield on Morpho · encrypted the whole way',
     receipts: [
       {
         id: 'st-sign',
         glyph: 'sign',
         stamp: 'wallet',
         layer: 'You',
-        narration: 'Your wallet signed the stake intent before it left your laptop.',
+        narration: 'Your wallet signed the shield + yield deposit intent — the amount never left your browser as plaintext.',
         delayMs: 2500, // main user prompt commits
       },
       {
@@ -273,7 +273,7 @@ export const PROVENANCE: Record<string, Provenance> = {
         stamp: 'attestation',
         layer: 'Brain',
         narration:
-          'A TEE chose 0g-validator-1 against your existing positions and signed the plan.',
+          'The FHEVM co-processor verified the ZKPoK and routed the encrypted balance directly into the Morpho vault interface — no decryption step.',
         delayMs: 3100, // think bubble visible
       },
       {
@@ -282,8 +282,8 @@ export const PROVENANCE: Record<string, Provenance> = {
         stamp: 'chain',
         layer: 'Chain',
         narration:
-          'Stake locked on the validator network. The 14-day unlock is enforced by the validator contract.',
-        proofHref: CHAINSCAN_ADDR + GIMO_POOL,
+          'AnimaPayroll.earnYield() deposited the shielded balance into the Steakhouse Confidential Prime USDC vault on Morpho. Amount stays encrypted through the entire yield pipeline.',
+        proofHref: ETHERSCAN_ADDR + ANIMA_PAYROLL,
         delayMs: 4500, // chain.tx tool ✓
       },
       {
@@ -291,7 +291,8 @@ export const PROVENANCE: Record<string, Provenance> = {
         glyph: 'lock',
         stamp: 'storage',
         layer: 'Memory',
-        narration: "Position recorded against the agent's portfolio on 0G Storage.",
+        narration:
+          'The TVS (Total Value Shielded) feed updates automatically via IERC7984.totalEncryptedSupply() — no decryption needed to track shielded volume.',
         delayMs: 5500, // memory.save tool ✓
       },
       {
@@ -300,8 +301,8 @@ export const PROVENANCE: Record<string, Provenance> = {
         stamp: 'chain',
         layer: 'Chain',
         narration:
-          "The storage root was sealed into the agent's iNFT, so the portfolio survives operator handoff.",
-        proofHref: CHAINSCAN_ADDR + ANIMA_AGENT_NFT,
+          'All three contracts — Payroll, Registry, Disperse — are deployed and verified on Etherscan. Real code, real transactions, real FHE.',
+        proofHref: ETHERSCAN_ADDR + ANIMA_PAYROLL,
         delayMs: 7000, // ~1.1s after reply lands
       },
     ],

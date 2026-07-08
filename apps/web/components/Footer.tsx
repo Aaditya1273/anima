@@ -5,7 +5,8 @@ import Link from 'next/link'
 const PROJECT_LINKS = [
   { label: 'GitHub', href: 'https://github.com/Aaditya1273/anima', external: true },
   { label: 'README', href: 'https://github.com/Aaditya1273/anima#readme', external: true },
-  { label: 'Releases', href: 'https://github.com/Aaditya1273/anima/releases', external: true },
+  { label: 'Zama FHEVM', href: 'https://docs.zama.ai/protocol', external: true },
+  { label: 'ERC-7984', href: 'https://eips.ethereum.org/EIPS/eip-7984', external: true },
 ]
 
 const COMMUNITY_LINKS = [{ label: '@Aaditya1273', href: 'https://x.com/iocryposto1273', external: true }]
