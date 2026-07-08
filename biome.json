@@ -41,7 +41,7 @@
       "dist",
       "build",
       ".vercel",
-      "pnpm-lock.yaml",
+      "pnpm-lock.yaml", "package-lock.json",
       ".changeset",
       "packages/shared/src/abis.ts",
       "packages/shared/src/addresses.ts",

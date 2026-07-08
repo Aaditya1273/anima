@@ -6,10 +6,6 @@
   "repository": "github.com/s0nderlabs/anima",
   "license": "MIT",
   "packageManager": "pnpm@9.15.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "scripts": {
     "dev": "pnpm --filter @anima/web dev",
     "build": "pnpm --filter @anima/web build",

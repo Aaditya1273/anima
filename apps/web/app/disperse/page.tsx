@@ -23,11 +23,13 @@ type DeployState =
   | { status: 'encrypting' }
   | { status: 'signing' }
   | { status: 'broadcasting' }
-  | { status: 'done'; id: bigint; txHash: string }
+  | { status: 'done'; airdropAddress: `0x${string}`; txHash: string }
   | { status: 'error'; message: string }
 
 export default function DispersePage() {
   const { address: account, isConnected } = useAccount()
+  const publicClient = usePublicClient()
+  const { data: walletClient } = useWalletClient()
   const [recipients, setRecipients] = useState<Recipient[]>([])
   const [recipientInput, setRecipientInput] = useState('')
   const [amountInput, setAmountInput] = useState('')
@@ -86,9 +88,8 @@ export default function DispersePage() {
   // ── deploy ────────────────────────────────────────────────────────────────
 
   async function handleDeploy() {
-    if (!isConnected || recipients.length === 0) return
+    if (!isConnected || !publicClient || !walletClient || recipients.length === 0) return
     const token = (tokenAddress || ANIMA_PAYROLL_ADDRESS) as `0x${string}`
-    const disperseContract = ANIMA_DISPERSE_ADDRESS
 
     const mapped: TokenOpsRecipient[] = recipients.map(r => ({
       address: r.address as `0x${string}`,
@@ -114,13 +115,12 @@ export default function DispersePage() {
 
       const result = await createConfidentialAirdrop({
         token,
-        disperseContract,
         recipients: mapped,
         vestingSchedule: vesting,
-      })
+      }, publicClient, walletClient)
 
       clearTimeout(timeoutHandle)
-      setDeployState({ status: 'done', id: result.id, txHash: result.txHash })
+      setDeployState({ status: 'done', airdropAddress: result.airdropAddress, txHash: result.txHash })
       // Reset singleton so next call picks up any new signer
       resetTokenOpsClient()
     } catch (err) {
@@ -391,7 +391,7 @@ export default function DispersePage() {
                 {deployState.status === 'done' && (
                   <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-paper)] p-4">
                     <p className="text-[13px] text-[var(--color-ink)]">
-                      Distribution #{deployState.id.toString()} deployed.
+                      Distribution deployed at {deployState.airdropAddress.slice(0, 6)}&hellip;{deployState.airdropAddress.slice(-4)}.
                     </p>
                     <Link
                       href={`https://sepolia.etherscan.io/tx/${deployState.txHash}`}

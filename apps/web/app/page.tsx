@@ -6,9 +6,9 @@ import { Section3 } from '@/components/sections/Section3'
 import { Section4 } from '@/components/sections/Section4'
 
 export const metadata = {
-  title: 'anima · first fully on-chain sovereign agent harness on 0G',
+  title: 'anima · programmable confidential finance',
   description:
-    'Identity on 0G Chain, brain on 0G Compute, memory on 0G Storage, harness on 0G Sandbox. Close the laptop, the agent survives.',
+    'FHE-powered payroll, compliant token shielding, and confidential distributions on Ethereum Sepolia. Balances and transfer amounts stay encrypted on-chain.',
 }
 
 export default function LandingPage() {

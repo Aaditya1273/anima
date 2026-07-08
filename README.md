@@ -57,16 +57,19 @@ Every FHE demo shows a counter or a token transfer. Anima shows a use case that 
 ### Verify on Sepolia (30 seconds, no install needed)
 
 ```bash
-# Requires cast (Foundry). Replace addresses once deployed.
+# Requires cast (Foundry). All three contracts live on Ethereum Sepolia.
 
-# AnimaPayroll — confidential payroll vault
-cast call <PAYROLL_ADDRESS> "name()(string)" --rpc-url https://rpc.sepolia.org
+# AnimaPayroll — confidential payroll vault (verified on Etherscan)
+cast call 0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB "confidentialProtocolId()(uint256)" \
+  --rpc-url https://sepolia.infura.io/v3/34d389f9de9c42b4a696188beb46c03d
 
 # AnimaRegistryRouter — surfaces official Zama registry
-cast call <ROUTER_ADDRESS> "officialPairCount()(uint256)" --rpc-url https://rpc.sepolia.org
+cast call 0x447356d0825409428F1D90E65e067A3710599f83 "officialPairCount()(uint256)" \
+  --rpc-url https://sepolia.infura.io/v3/34d389f9de9c42b4a696188beb46c03d
 
 # AnimaDisperse — confidential distribution engine
-cast call <DISPERSE_ADDRESS> "distributionCount()(uint256)" --rpc-url https://rpc.sepolia.org
+cast call 0xdF687b7fD99E9291CD0633F8c122A8ff8712Ab61 "distributionCount()(uint256)" \
+  --rpc-url https://sepolia.infura.io/v3/34d389f9de9c42b4a696188beb46c03d
 ```
 
 ### Key code paths
@@ -178,11 +181,11 @@ All contracts inherit `ZamaEthereumConfig`, use `@fhevm/solidity`, deployed on S
 
 | Contract | Address | Etherscan | Track |
 |---|---|---|---|
-| `AnimaPayroll` | `TBD — deploy in progress` | — | Builder |
-| `AnimaRegistryRouter` | `TBD — deploy in progress` | — | Bounty |
-| `AnimaDisperse` | `TBD — deploy in progress` | — | TokenOps |
+| `AnimaPayroll` | `0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB` | [view ↗](https://sepolia.etherscan.io/address/0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB#code) | Builder |
+| `AnimaRegistryRouter` | `0x447356d0825409428F1D90E65e067A3710599f83` | [view ↗](https://sepolia.etherscan.io/address/0x447356d0825409428F1D90E65e067A3710599f83) | Bounty |
+| `AnimaDisperse` | `0xdF687b7fD99E9291CD0633F8c122A8ff8712Ab61` | [view ↗](https://sepolia.etherscan.io/address/0xdF687b7fD99E9291CD0633F8c122A8ff8712Ab61) | TokenOps |
 
-> Run `pnpm deploy:sepolia` to deploy all three. Addresses auto-write to `packages/shared/src/addresses.ts` and this table updates.
+Deployed on Ethereum Sepolia (chainId 11155111) · Deployer `0x10625674f9780E604074e94b6F6f6F026f3a1BdA` · Deployed 2026-07-08
 
 ### Gas benchmarks
 
@@ -627,3 +630,4 @@ Building for **Zama Developer Program Season 3** (Builder, Bounty, Special Bount
 ## License
 
 MIT
+freebuff --continue 2026-07-08T00-21-00.037Z

@@ -2,3 +2,13 @@ packages:
   - 'apps/*'
   - 'packages/*'
   - 'contracts'
+allowBuilds:
+  '@biomejs/biome': set this to true or false
+  bufferutil: set this to true or false
+  keccak: set this to true or false
+  secp256k1: set this to true or false
+  sharp: set this to true or false
+  utf-8-validate: set this to true or false
+minimumReleaseAgeExclude:
+  - '@zama-fhe/react-sdk@3.3.0-alpha.11'
+  - '@zama-fhe/sdk@3.3.0-alpha.11'

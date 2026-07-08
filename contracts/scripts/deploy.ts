@@ -28,7 +28,7 @@ import { ethers, run } from 'hardhat'
 const ZAMA_WRAPPERS_REGISTRY_SEPOLIA =
   (process.env.ZAMA_WRAPPERS_REGISTRY && process.env.ZAMA_WRAPPERS_REGISTRY.startsWith('0x'))
     ? process.env.ZAMA_WRAPPERS_REGISTRY
-    : '0x0000000000000000000000000000000000000000'
+    : ethers.ZeroAddress
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -161,7 +161,7 @@ async function main(): Promise<void> {
 
     // Wait ~6 blocks before verifying so Etherscan has indexed the bytecode
     console.log('  waiting for 6 block confirmations…')
-    await payroll.deploymentTransaction()?.wait(6)
+    await disperse.deploymentTransaction()?.wait(6)
 
     await verify(payrollAddr, [])
     await verify(routerAddr, [ZAMA_WRAPPERS_REGISTRY_SEPOLIA])

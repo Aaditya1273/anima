@@ -61,3 +61,7 @@ apps/web/.next/
 apps/web/.vercel/
 apps/web/out/
 .vercel
+
+# Restored from helper repo — V2-V7 sections active
+# HeroCanvas + hero/ folder still excluded (do not touch)
+

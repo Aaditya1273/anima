@@ -191,7 +191,7 @@ html.dark {
     letter-spacing: -0.005em;
     background: var(--color-cream);
     color: var(--color-ink);
-    overflow-x: hidden;
+    overflow-x: clip;
   }
   /* Gate the smooth bg/color crossfade behind a one-frame-late
      attribute set by the pre-hydration script. Without this gate,

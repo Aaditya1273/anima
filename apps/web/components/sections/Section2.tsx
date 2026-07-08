@@ -1,7 +1,3 @@
-// Section 2 · Every layer on 0G
-// 7 viewports: opener + Identity / Brain / Memory / Limbs / Comms / Economy.
-// Full implementation lands in Phase D of the build plan.
-
 import { V1Opener } from './section2/V1Opener'
 import { V2Identity } from './section2/V2Identity'
 import { V3Brain } from './section2/V3Brain'

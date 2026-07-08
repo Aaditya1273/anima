@@ -86,7 +86,9 @@ contract AnimaRegistryRouter is ZamaEthereumConfig, ReentrancyGuard {
     /// @param _officialRegistry  Address of the official Zama Wrappers Registry on Sepolia.
     ///                           Source: https://docs.zama.ai/protocol/addresses
     constructor(address _officialRegistry) {
-        require(_officialRegistry != address(0), "AnimaRegistryRouter: zero registry address");
+        // Zero address is allowed as a placeholder when the official Zama
+        // Wrappers Registry address has not yet been published on this network.
+        // Update via redeployment once the official address is known.
         officialRegistry = IZamaWrappersRegistry(_officialRegistry);
     }
 
