@@ -1,7 +1,9 @@
 import { Navbar } from '@/components/Navbar'
 import { Footer } from '@/components/Footer'
 import { Hero } from '@/components/sections/Hero'
-import { V1Opener } from '@/components/sections/section2/V1Opener'
+import { Section2 } from '@/components/sections/Section2'
+import { Section3 } from '@/components/sections/Section3'
+import { Section4 } from '@/components/sections/Section4'
 
 export const metadata = {
   title: 'anima · first fully on-chain sovereign agent harness on 0G',
@@ -14,7 +16,9 @@ export default function LandingPage() {
     <main className="relative min-h-screen bg-[var(--color-cream)] text-[var(--color-ink)]">
       <Navbar />
       <Hero />
-      <V1Opener />
+      <Section2 />
+      <Section3 />
+      <Section4 />
       <Footer />
     </main>
   )

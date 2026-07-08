@@ -2,6 +2,7 @@
 
 import { useSiwe } from '@/components/SiweContext'
 import { ConnectGate } from '@/components/console/ConnectGate'
+import { TvsDashboard } from '@/components/console/TvsDashboard'
 import { motion } from 'framer-motion'
 
 const REVEAL_EASE = [0.22, 1, 0.36, 1] as const
@@ -38,12 +39,7 @@ export default function ConsoleHome() {
             </motion.p>
           </header>
 
-          {/* TVS Dashboard — Phase 3 */}
-          <div className="rounded-2xl border border-[var(--color-border)] p-8">
-            <p className="text-sm text-[var(--color-ink-2)]">
-              TVS dashboard and asset manager coming in Phase 3.
-            </p>
-          </div>
+          <TvsDashboard />
         </>
       ) : (
         <div className="grid min-h-[60vh] place-items-center">

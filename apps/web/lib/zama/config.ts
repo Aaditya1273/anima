@@ -12,6 +12,8 @@ import { wagmiConfig } from '@/lib/wagmi'
  */
 export const sepoliaFheChain = {
   ...sepoliaFhe,
+  // Proxy through our Next.js API route — keeps any future API key server-side.
+  // On Sepolia testnet no key is required; the proxy forwards without one.
   relayerUrl: '/api/relayer/11155111',
 } as const satisfies FheChain
 

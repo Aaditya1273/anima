@@ -1,22 +1,29 @@
 /**
  * Server-side Zama FHE relayer proxy.
  *
- * The browser calls /api/relayer/11155111/* and this route forwards the
- * request to Zama's relayer network, injecting the ZAMA_API_KEY header.
+ * Forwards browser FHE requests to Zama's relayer network.
  *
- * The API key MUST stay server-side. Never prefix with NEXT_PUBLIC_.
+ * Sepolia testnet (chainId 11155111):
+ *   No API key required — Zama's relayer is open on testnet.
+ *   ZAMA_API_KEY env var can be left blank.
  *
- * Based on: https://docs.zama.ai/protocol/sdk/guides/authentication
+ * Ethereum mainnet (production):
+ *   Requires a relayer API key obtained by following:
+ *   https://github.com/zama-ai/fhevm-relayer-sdk
+ *   Set ZAMA_API_KEY in .env.local — never prefix with NEXT_PUBLIC_.
  */
 
 import { type NextRequest, NextResponse } from 'next/server'
 
-const ZAMA_RELAYER_BASE = 'https://relayer.zama.ai'
+// Sepolia testnet relayer (open, no key required)
+const SEPOLIA_RELAYER  = 'https://relayer.testnet.zama.ai'
+// Mainnet relayer (API key required)
+const MAINNET_RELAYER  = 'https://relayer.zama.ai'
 
-function getApiKey(): string {
-  const key = process.env.ZAMA_API_KEY
-  if (!key) throw new Error('ZAMA_API_KEY env var is not set')
-  return key
+const SEPOLIA_CHAIN_ID = '11155111'
+
+function getRelayerBase(chainId: string): string {
+  return chainId === SEPOLIA_CHAIN_ID ? SEPOLIA_RELAYER : MAINNET_RELAYER
 }
 
 export async function GET(
@@ -38,18 +45,23 @@ async function proxy(
   params: { chainId: string },
 ): Promise<NextResponse> {
   const { chainId } = params
-  const url = new URL(req.url)
-  // Strip the /api/relayer/<chainId> prefix and forward the rest
+  const url   = new URL(req.url)
+  const base  = getRelayerBase(chainId)
   const suffix = url.pathname.replace(`/api/relayer/${chainId}`, '')
-  const target = `${ZAMA_RELAYER_BASE}/${chainId}${suffix}${url.search}`
+  const target = `${base}/${chainId}${suffix}${url.search}`
 
   try {
-    const apiKey = getApiKey()
     const headers = new Headers(req.headers)
-    headers.set('x-api-key', apiKey)
     headers.delete('host')
 
+    // Inject API key only when set (mainnet) — testnet works without it
+    const apiKey = process.env.ZAMA_API_KEY
+    if (apiKey) {
+      headers.set('x-api-key', apiKey)
+    }
+
     const body = req.method === 'POST' ? await req.arrayBuffer() : undefined
+
     const upstream = await fetch(target, {
       method: req.method,
       headers,
