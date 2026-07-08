@@ -160,7 +160,7 @@ contract AnimaPayroll is ZamaEthereumConfig, ReentrancyGuard {
         euint64 amount = FHE.fromExternal(encAmount, proof);
 
         // FHE guard: canWithdraw = (amount <= balance)
-        ebool canWithdraw = FHE.lte(amount, _balances[token][msg.sender]);
+        ebool canWithdraw = FHE.le(amount, _balances[token][msg.sender]);
 
         // Conditional subtraction via cmux — only deducts if canWithdraw == true
         // If false, balance is unchanged (no revert, no plaintext leak)
@@ -196,7 +196,7 @@ contract AnimaPayroll is ZamaEthereumConfig, ReentrancyGuard {
         euint64 amount = FHE.fromExternal(encAmount, proof);
 
         // FHE guard: only deposit if balance >= amount
-        ebool canDeposit = FHE.lte(amount, _balances[token][msg.sender]);
+        ebool canDeposit = FHE.le(amount, _balances[token][msg.sender]);
         _balances[token][msg.sender] = FHE.select(
             canDeposit,
             FHE.sub(_balances[token][msg.sender], amount),
@@ -228,7 +228,7 @@ contract AnimaPayroll is ZamaEthereumConfig, ReentrancyGuard {
     ) external nonReentrant {
         euint64 amount = FHE.fromExternal(encAmount, proof);
 
-        ebool canWithdraw = FHE.lte(amount, _yieldBalances[token][msg.sender]);
+        ebool canWithdraw = FHE.le(amount, _yieldBalances[token][msg.sender]);
         _yieldBalances[token][msg.sender] = FHE.select(
             canWithdraw,
             FHE.sub(_yieldBalances[token][msg.sender], amount),

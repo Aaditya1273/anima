@@ -1,0 +1,162 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IZamaWrappersRegistry",
+  "sourceName": "src/AnimaRegistryRouter.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "erc20",
+          "type": "address"
+        }
+      ],
+      "name": "getPairByERC20",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "erc20",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "erc7984",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "symbol",
+              "type": "string"
+            },
+            {
+              "internalType": "uint8",
+              "name": "decimals",
+              "type": "uint8"
+            }
+          ],
+          "internalType": "struct IZamaWrappersRegistry.Pair",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "erc7984",
+          "type": "address"
+        }
+      ],
+      "name": "getPairByERC7984",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "erc20",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "erc7984",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "symbol",
+              "type": "string"
+            },
+            {
+              "internalType": "uint8",
+              "name": "decimals",
+              "type": "uint8"
+            }
+          ],
+          "internalType": "struct IZamaWrappersRegistry.Pair",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pairCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "name": "pairs",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "address",
+              "name": "erc20",
+              "type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "erc7984",
+              "type": "address"
+            },
+            {
+              "internalType": "string",
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "symbol",
+              "type": "string"
+            },
+            {
+              "internalType": "uint8",
+              "name": "decimals",
+              "type": "uint8"
+            }
+          ],
+          "internalType": "struct IZamaWrappersRegistry.Pair",
+          "name": "",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

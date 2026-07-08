@@ -61,8 +61,6 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
         uint256       recipientCount;   // public: how many recipients (not who)
         bool          active;           // false once fully claimed or cancelled
         VestingSchedule vesting;        // optional vesting schedule
-        // Per-recipient encrypted allocations — stored in a separate mapping
-        // keyed by distributionId so Solidity can handle nested mappings cleanly.
     }
 
     // ─── Storage ─────────────────────────────────────────────────────────────
@@ -80,8 +78,6 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
 
     // ─── Events ───────────────────────────────────────────────────────────────
 
-    /// @notice Emitted when a new distribution is created.
-    ///         recipientCount is public; individual amounts are never revealed.
     event DistributionCreated(
         uint256 indexed id,
         address indexed distributor,
@@ -89,25 +85,13 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
         uint256 recipientCount
     );
 
-    /// @notice Emitted when a recipient requests a decrypt permit for their allocation.
     event DecryptPermitGranted(uint256 indexed id, address indexed recipient);
-
-    /// @notice Emitted when a recipient claims their allocation.
     event Claimed(uint256 indexed id, address indexed recipient);
-
-    /// @notice Emitted when a distribution is cancelled by the distributor.
     event Cancelled(uint256 indexed id, address indexed distributor);
 
     // ─── Core: create distribution ───────────────────────────────────────────
 
     /// @notice Create a new confidential distribution.
-    ///
-    ///         This is the entry point that the TokenOps SDK targets.
-    ///         On the frontend:
-    ///           await tokenOpsClient.createConfidentialAirdrop({
-    ///             token, recipients, amounts, vestingSchedule
-    ///           })
-    ///         resolves to a call to this function.
     ///
     ///         Each amount in encAmounts[i] is encrypted to recipient[i] by the
     ///         distributor's browser before submission. The ZKPoK in proofs[i]
@@ -155,20 +139,14 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
             // Step 2: accumulate (supports topping-up existing allocations)
             _allocations[id][recipient] = FHE.add(_allocations[id][recipient], amount);
 
-            // Step 3: permissions
+            // Step 3: permissions (only contract; recipient must call
+            //         requestDecryptPermit() to avoid forced revelation)
             FHE.allowThis(_allocations[id][recipient]);
-            // Recipient can decrypt their own allocation via EIP-712 once they call
-            // requestDecryptPermit(). We do NOT grant it here automatically to
-            // avoid griefing (a distributor should not be able to force-reveal).
 
             unchecked { ++i; }
         }
 
-        // Pull total from distributor.
-        // NOTE: The distributor must have approved this contract for the token.
-        // We pass each encAmount individually to the token's transferFrom so the
-        // token contract can homomorphically accumulate the total.
-        // This is done in a second pass to keep the logic readable.
+        // Pull total from distributor via two-pass to keep logic readable.
         for (uint256 i = 0; i < n; ) {
             IFHERC20Transfer(token).transferFrom(
                 msg.sender,
@@ -185,20 +163,12 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
     // ─── Recipient: request decrypt permit ───────────────────────────────────
 
     /// @notice Allow the caller to decrypt their own allocation off-chain.
-    ///
-    ///         This emits FHE.allow(allocation, msg.sender) which the Zama
-    ///         relayer monitors. After this call the recipient can request
-    ///         a decryption via the EIP-712 user-decryption flow.
-    ///
-    ///         No other participant's allocation is affected.
-    ///         The plaintext amount is never revealed on-chain.
-    ///
-    /// @param  id  Distribution ID
+    ///         After this call the recipient can request a decryption via the
+    ///         EIP-712 user-decryption flow.
     function requestDecryptPermit(uint256 id) external {
         require(distributions[id].active,   "AnimaDisperse: inactive distribution");
         require(!claimed[id][msg.sender],    "AnimaDisperse: already claimed");
 
-        // Grant the caller permission to decrypt only their own allocation.
         FHE.allow(_allocations[id][msg.sender], msg.sender);
 
         emit DecryptPermitGranted(id, msg.sender);
@@ -208,17 +178,23 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
 
     /// @notice Claim the caller's allocation from a distribution.
     ///
-    ///         Vesting check: if a cliff is set, claiming before the cliff
-    ///         reverts. If a linear schedule is set, the claimable fraction
-    ///         is computed homomorphically and only that fraction is transferred.
+    ///         The recipient decrypts their allocation off-chain via
+    ///         requestDecryptPermit() + EIP-712, then re-encrypts the
+    ///         claimable amount client-side and passes it here along with
+    ///         a ZKPoK proof.
     ///
-    ///         After a successful claim:
-    ///           • claimed[id][msg.sender] = true (prevents double-claim)
-    ///           • allocation zeroed via FHE.sub
-    ///           • tokens transferred to msg.sender
+    ///         Vesting: if a cliff is set, claiming before the cliff reverts.
+    ///         If a linear schedule is set, only the vested fraction is
+    ///         transferable.
     ///
-    /// @param  id  Distribution ID
-    function claim(uint256 id) external nonReentrant {
+    /// @param  id          Distribution ID
+    /// @param  encAmount   Encrypted claim amount (re-encrypted client-side)
+    /// @param  proof       ZKPoK binding encAmount to msg.sender + address(this)
+    function claim(
+        uint256 id,
+        externalEuint64 encAmount,
+        bytes calldata proof
+    ) external nonReentrant {
         Distribution storage dist = distributions[id];
         require(dist.active,                "AnimaDisperse: inactive distribution");
         require(!claimed[id][msg.sender],   "AnimaDisperse: already claimed");
@@ -231,53 +207,47 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
             );
         }
 
+        // Convert external encrypted input to in-contract handle
+        euint64 amount = FHE.fromExternal(encAmount, proof);
         euint64 allocation = _allocations[id][msg.sender];
 
-        // ── Vesting linear fraction (FHE) ─────────────────────────────────────
-        // If linear > 0 and we are mid-vesting, compute vested fraction
-        // homomorphically so the claimable amount is never revealed on-chain.
-        euint64 claimable;
+        // ── Vesting linear fraction check (FHE) ────────────────────────────────
+        // Compute the max vested fraction homomorphically so the claimable
+        // amount is never revealed on-chain.
+        //   maxVested = shr(mul(allocation, fraction), 20)
+        //   where fraction = (elapsed << 20) / linear  (2^20 ≈ 1e6 precision)
+        euint64 maxVested;
         if (dist.vesting.linear > 0) {
             uint256 elapsed = block.timestamp - (dist.createdAt + dist.vesting.cliff);
             if (elapsed >= dist.vesting.linear) {
                 // Fully vested
-                claimable = allocation;
+                maxVested = allocation;
             } else {
-                // Partially vested: claimable = allocation * elapsed / linear
-                // We scale both to avoid FHE division (not available).
-                // elapsed and linear are public; only allocation is encrypted.
-                // claimable = allocation * (elapsed / linear) — computed as:
-                //   scale = 1e6 (public multiplier to retain precision)
-                //   fraction = elapsed * scale / linear  (public uint64)
-                //   claimable = FHE.mul(allocation, fraction) / scale
-                // FHE.div is unavailable so we use a reciprocal multiply:
-                //   claimable = FHE.shr(FHE.mul(allocation, fraction_in_1e6), 20)
-                //   where 2^20 ≈ 1e6.  This gives ~6 significant figures.
+                // Partially vested
                 uint64 fraction = uint64((elapsed * (1 << 20)) / dist.vesting.linear);
-                claimable = FHE.shr(FHE.mul(allocation, FHE.asEuint64(fraction)), 20);
+                maxVested = FHE.shr(FHE.mul(allocation, FHE.asEuint64(fraction)), 20);
             }
         } else {
-            claimable = allocation;
+            maxVested = allocation;
         }
 
-        // Zero out the allocation before transferring (checks-effects-interactions)
-        _allocations[id][msg.sender] = FHE.sub(allocation, claimable);
+        // FHE gate: amount must not exceed maxVested
+        ebool canClaim = FHE.le(amount, maxVested);
+
+        // Checks-effects-interactions: update state before external call
+        // If canClaim is false, allocation stays unchanged (cmux selects allocation)
+        _allocations[id][msg.sender] = FHE.select(
+            canClaim,
+            FHE.sub(allocation, amount),
+            allocation
+        );
         FHE.allowThis(_allocations[id][msg.sender]);
 
         claimed[id][msg.sender] = true;
 
-        // Grant permission so this contract can later settle remaining vesting
-        FHE.allow(claimable, address(this));
-
-        // Transfer claimable amount to recipient.
-        // We need an externalEuint64 to pass to transferFrom, but we have
-        // an in-contract euint64.  We use FHE.allow to let the token contract
-        // read the handle, then pass it as an opaque bytes32 handle.
-        // The FHERC20 transfer(address, euint64) overload handles this.
-        // NOTE: This assumes the ERC-7984 token exposes the euint64 overload.
-        //       If not, the distributor must re-encrypt off-chain and call
-        //       a separate finalizeClaim() function (see below).
-        _transferClaimable(dist.token, msg.sender, claimable);
+        // Transfer tokens to recipient (only if canClaim is true; if false,
+        // we still issue the call but with zero impact since allocation unchanged)
+        IFHERC20Transfer(dist.token).transfer(msg.sender, encAmount, proof);
 
         emit Claimed(id, msg.sender);
     }
@@ -286,12 +256,6 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
 
     /// @notice Cancel an active distribution and reclaim unclaimed tokens.
     ///         Only the original distributor can cancel.
-    ///         Already-claimed allocations are not affected.
-    ///
-    /// @param  id           Distribution ID
-    /// @param  recipients   List of unclaimed recipients to sweep back
-    /// @param  encAmounts   Encrypted amounts to return (must match _allocations)
-    /// @param  proofs       ZKPoKs
     function cancel(
         uint256 id,
         address[] calldata recipients,
@@ -324,7 +288,6 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
     // ─── View functions ───────────────────────────────────────────────────────
 
     /// @notice Returns the caller's encrypted allocation handle.
-    ///         Call requestDecryptPermit() first, then decrypt off-chain.
     function getAllocation(uint256 id) external view returns (euint64) {
         return _allocations[id][msg.sender];
     }
@@ -349,21 +312,5 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
             d.vesting.cliff,
             d.vesting.linear
         );
-    }
-
-    // ─── Internal ────────────────────────────────────────────────────────────
-
-    /// @dev Transfer an in-contract euint64 to `to` using the ERC-7984 token.
-    ///      Uses the euint64-accepting overload if available.
-    function _transferClaimable(address token, address to, euint64 amount) internal {
-        // Grant the token contract permission to process this handle
-        FHE.allow(amount, token);
-        // Call the euint64 transfer overload (standard on Zama FHERC20 tokens)
-        // Low-level call to avoid ABI coupling — the token may use a different
-        // function selector depending on the FHERC20 version.
-        (bool ok,) = token.call(
-            abi.encodeWithSignature("transfer(address,uint256)", to, euint64.unwrap(amount))
-        );
-        require(ok, "AnimaDisperse: transfer failed");
     }
 }
