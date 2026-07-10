@@ -104,11 +104,11 @@ export interface AnimaRegistryRouterInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "unwrap",
-    values: [BigNumberish, BytesLike, BytesLike]
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "wrap",
-    values: [BigNumberish, BytesLike, BytesLike]
+    values: [BigNumberish, BigNumberish]
   ): string;
 
   decodeFunctionResult(
@@ -288,13 +288,13 @@ export interface AnimaRegistryRouter extends BaseContract {
   officialRegistry: TypedContractMethod<[], [string], "view">;
 
   unwrap: TypedContractMethod<
-    [pairId: BigNumberish, encAmount: BytesLike, proof: BytesLike],
+    [pairId: BigNumberish, erc20Amount: BigNumberish],
     [void],
     "nonpayable"
   >;
 
   wrap: TypedContractMethod<
-    [pairId: BigNumberish, encAmount: BytesLike, proof: BytesLike],
+    [pairId: BigNumberish, erc20Amount: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -346,14 +346,14 @@ export interface AnimaRegistryRouter extends BaseContract {
   getFunction(
     nameOrSignature: "unwrap"
   ): TypedContractMethod<
-    [pairId: BigNumberish, encAmount: BytesLike, proof: BytesLike],
+    [pairId: BigNumberish, erc20Amount: BigNumberish],
     [void],
     "nonpayable"
   >;
   getFunction(
     nameOrSignature: "wrap"
   ): TypedContractMethod<
-    [pairId: BigNumberish, encAmount: BytesLike, proof: BytesLike],
+    [pairId: BigNumberish, erc20Amount: BigNumberish],
     [void],
     "nonpayable"
   >;

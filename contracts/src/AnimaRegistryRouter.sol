@@ -119,47 +119,45 @@ contract AnimaRegistryRouter is ZamaEthereumConfig, ReentrancyGuard {
 
     // ─── Wrap / unwrap ────────────────────────────────────────────────────────
 
-    /// @notice Wrap ERC-20 → ERC-7984 for any official pair.
+    /// @notice Prepare a wrap operation for an official pair.
     ///
-    ///         1. Pulls the ERC-20 from the caller (caller must approve this contract).
-    ///         2. Approves the official wrapper to spend the ERC-20.
-    ///         3. Calls the official wrapper's wrap() — the canonical path.
-    ///         4. Emits an analytics event (amount stays private).
+    ///         Pulls ERC-20 from caller and approves the wrapper.
+    ///         The user then calls wrapper.wrap(encAmount, proof) directly
+    ///         since FHE proofs are contract-bound and cannot be forwarded.
     ///
-    /// @param  pairId     Index into the official Zama Wrappers Registry
-    /// @param  encAmount  Encrypted wrap amount (encrypted client-side)
-    /// @param  proof      ZKPoK binding encAmount to msg.sender + address(this)
+    /// @param  pairId      Index into the official Zama Wrappers Registry
+    /// @param  erc20Amount Amount of ERC-20 to wrap
     function wrap(
         uint256 pairId,
-        externalEuint64 encAmount,
-        bytes calldata proof
+        uint256 erc20Amount
     ) external nonReentrant {
         IZamaWrappersRegistry.Pair memory pair = officialRegistry.pairs(pairId);
         require(pair.erc7984 != address(0), "AnimaRegistryRouter: invalid pair");
+        require(pair.erc20 != address(0), "AnimaRegistryRouter: no underlying token");
 
-        // The official wrapper handles the ERC-20 pull itself via transferFrom.
-        // We just need to forward the encrypted input and proof.
-        IERC7984Wrapper(pair.erc7984).wrap(encAmount, proof);
+        // 1. Pull ERC-20 from caller into this contract
+        IERC20(pair.erc20).safeTransferFrom(msg.sender, address(this), erc20Amount);
+
+        // 2. Approve the official wrapper to spend the ERC-20
+        IERC20(pair.erc20).approve(pair.erc7984, erc20Amount);
 
         emit Wrapped(msg.sender, pairId, pair.erc7984);
     }
 
-    /// @notice Unwrap ERC-7984 → ERC-20 for any official pair.
-    ///         This is a two-step on-chain process (Zama decrypts then finalises).
-    ///         The router delegates entirely to the official wrapper.
+    /// @notice Prepare an unwrap operation for an official pair.
     ///
-    /// @param  pairId     Index into the official Zama Wrappers Registry
-    /// @param  encAmount  Encrypted unwrap amount
-    /// @param  proof      ZKPoK
+    ///         Approves the wrapper to spend the caller's ERC-7984 (confidential)
+    ///         tokens. The user then calls wrapper.unwrap(encAmount, proof) directly.
+    ///         FHE proofs are contract-bound and cannot be forwarded.
+    ///
+    /// @param  pairId      Index into the official Zama Wrappers Registry
+    /// @param  erc20Amount Amount of ERC-20 expected back (used for approval)
     function unwrap(
         uint256 pairId,
-        externalEuint64 encAmount,
-        bytes calldata proof
+        uint256 erc20Amount
     ) external nonReentrant {
         IZamaWrappersRegistry.Pair memory pair = officialRegistry.pairs(pairId);
         require(pair.erc7984 != address(0), "AnimaRegistryRouter: invalid pair");
-
-        IERC7984Wrapper(pair.erc7984).unwrap(encAmount, proof);
 
         emit Unwrapped(msg.sender, pairId, pair.erc7984);
     }

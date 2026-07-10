@@ -1,18 +1,21 @@
 /**
- * TokenOps SDK client — @tokenops/sdk/fhe-airdrop
+ * TokenOps SDK client — @tokenops/sdk (fhe-airdrop subpath)
  *
- * NO API KEY REQUIRED. The SDK talks directly to TokenOps' on-chain factory
- * contracts on Sepolia. It uses publicClient + walletClient + a Zama FHE
- * encryptor for client-side encryption.
+ * The TokenOps SDK (@tokenops/sdk@1.x) provides a createConfidentialAirdrop
+ * flow that encrypts amounts client-side and deploys a confidential airdrop
+ * clone via an on-chain factory on Sepolia.
  *
- * Key contract: ConfidentialAirdropFactoryClient
- *   createConfidentialAirdrop({ params, userSalt })
- *     → deploys a clone of the TokenOps confidential airdrop contract
- *     → returns { hash, airdrop } — the deployed airdrop address
+ * Note on architecture: The SDK deploys its own standalone ConfidentalAirdrop
+ * clones via the TokenOps factory. It does NOT use AnimaDisperse.sol directly.
+ * AnimaDisperse.sol is a separate alternative implementation that stores
+ * encrypted allocations internally. The TokenOps SDK integration is a
+ * complementary path for users who prefer the TokenOps factory pattern.
  *
- * Recipients call the airdrop clone's claim() function directly.
+ * The SDK is imported lazily. If the SDK or the fhe-airdrop subpath is not
+ * available, a descriptive error is thrown so the user knows to install or
+ * update @tokenops/sdk.
  *
- * The TOKENOPS_API_KEY env var is not needed and is removed.
+ * Recipients call the deployed airdrop clone's claim() function directly.
  */
 
 import type { Address, Hex, PublicClient, WalletClient } from 'viem'
@@ -46,28 +49,40 @@ export type DistributionResult = {
 
 // ─── Lazy factory client ──────────────────────────────────────────────────────
 
-let _factoryPromise: Promise<
-  import('@tokenops/sdk/fhe-airdrop').ConfidentialAirdropFactoryClient
-> | null = null
+let _factoryPromise: Promise<{
+  createConfidentialAirdrop: (opts: {
+    params: {
+      token: Address
+      startTimestamp: number
+      endTimestamp: number
+      canExtendClaimWindow: boolean
+      admin: Address
+      recipients: Array<{ account: Address; amount: bigint }>
+    }
+    userSalt: Hex
+    account: Address
+  }) => Promise<{ hash: string; airdrop: Address }>
+}> | null = null
 
 async function getFactoryClient(
   publicClient: PublicClient,
   walletClient: WalletClient,
-): Promise<import('@tokenops/sdk/fhe-airdrop').ConfidentialAirdropFactoryClient> {
-  // Re-create if clients changed (wallet reconnect)
+) {
   if (!_factoryPromise) {
     _factoryPromise = (async () => {
-      const { createConfidentialAirdropFactoryClient } = await import(
-        '@tokenops/sdk/fhe-airdrop'
-      )
-      // The encryptor is the Zama FHE encryptor — resolves via the ZamaProvider
-      // context that wraps the app. We pass it lazily so it picks up the current
-      // wallet's signer automatically.
-      return createConfidentialAirdropFactoryClient({
-        publicClient,
-        walletClient,
-        // chainId defaults to publicClient.chain.id (Sepolia = 11155111)
-      })
+      try {
+        const { createConfidentialAirdropFactoryClient } = await import(
+          '@tokenops/sdk/fhe-airdrop'
+        )
+        return createConfidentialAirdropFactoryClient({
+          publicClient,
+          walletClient,
+        })
+      } catch (cause: unknown) {
+        throw new Error(
+          `TokenOps SDK not available: ${cause instanceof Error ? cause.message : 'dynamic import failed'}. Install with: pnpm add @tokenops/sdk`,
+        )
+      }
     })()
   }
   return _factoryPromise
@@ -75,19 +90,6 @@ async function getFactoryClient(
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-/**
- * Deploy a confidential airdrop via the TokenOps on-chain factory.
- *
- * Steps performed by the SDK:
- *   1. Calls factory.createConfidentialAirdrop({ params, userSalt }) on-chain
- *   2. Waits for the ConfidentialAirdropCreated event in the receipt
- *   3. Returns the deployed clone address + tx hash
- *
- * Recipients then call airdropClone.claim() on the returned airdropAddress.
- *
- * The distributor must have set the factory as an operator on the token before
- * funding: token.setOperator(factoryAddress, deadline)
- */
 export async function createConfidentialAirdrop(
   params: ConfidentialAirdropParams,
   publicClient: PublicClient,
@@ -95,28 +97,30 @@ export async function createConfidentialAirdrop(
 ): Promise<DistributionResult> {
   const factory = await getFactoryClient(publicClient, walletClient)
 
-  // Build TokenOps AirdropParams from our recipient list
+  const now = Math.floor(Date.now() / 1000)
+  const [account] = await walletClient.getAddresses()
   const airdropParams = {
     token: params.token,
-    // recipients is an array of { account, amount } in the TokenOps schema
+    startTimestamp: now - 60,
+    endTimestamp: now + 30 * 86400,
+    canExtendClaimWindow: true,
+    admin: account,
     recipients: params.recipients.map(r => ({
       account: r.address,
       amount: r.amount,
     })),
   }
 
-  // Unique salt — combine block timestamp + account to avoid collisions
-  const [account] = await walletClient.getAddresses()
   const userSalt: Hex = `0x${Date.now().toString(16).padStart(64, '0')}` as Hex
 
   const result = await factory.createConfidentialAirdrop({
-    params: airdropParams as Parameters<typeof factory.createConfidentialAirdrop>[0]['params'],
+    params: airdropParams,
     userSalt,
     account,
   })
 
   return {
-    airdropAddress: result.airdrop,
+    airdropAddress: result.airdrop as Address,
     txHash: result.hash as `0x${string}`,
   }
 }

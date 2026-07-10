@@ -5,6 +5,11 @@ import { Section2 } from '@/components/sections/Section2'
 import { Section3 } from '@/components/sections/Section3'
 import { Section4 } from '@/components/sections/Section4'
 
+// ISR: revalidate every 5 minutes — landing page content is static
+const REVALIDATE_SECONDS = 300
+
+export const revalidate = REVALIDATE_SECONDS
+
 export const metadata = {
   title: 'anima · programmable confidential finance',
   description:

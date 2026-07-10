@@ -4,6 +4,11 @@ import { DocsMobileNav } from '@/components/docs/DocsMobileNav'
 import { DocsPrevNext } from '@/components/docs/DocsPrevNext'
 import { getAdjacent, getDoc, getNavTree, listSlugs } from '@/lib/docs'
 
+// ISR: revalidate docs every hour — content changes infrequently
+const REVALIDATE_SECONDS = 3600
+
+export const revalidate = REVALIDATE_SECONDS
+
 interface PageProps {
   params: Promise<{ slug: string }>
 }

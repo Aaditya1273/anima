@@ -137,7 +137,7 @@ describe('AnimaRegistryRouter', function () {
 
   // ── wrap ─────────────────────────────────────────────────────────────────────
 
-  it('wrap() delegates to the official ERC-7984 wrapper and emits Wrapped', async function () {
+  it('wrap() pulls ERC-20, approves wrapper, and emits Wrapped', async function () {
     const AMOUNT = 500n
 
     // Fund alice with mock ERC-20
@@ -145,40 +145,29 @@ describe('AnimaRegistryRouter', function () {
     await ERC20.connect(actors.deployer).mint(actors.alice.address, 10_000n)
     await ERC20.connect(actors.alice).approve(routerAddress, ethers.MaxUint256)
 
-    const encInput = await fhevm
-      .createEncryptedInput(routerAddress, actors.alice.address)
-      .add64(AMOUNT)
-      .encrypt()
-
     await expect(
-      router.connect(actors.alice).wrap(0, encInput.handles[0], encInput.inputProof),
+      router.connect(actors.alice).wrap(0, AMOUNT),
     )
       .to.emit(router, 'Wrapped')
       .withArgs(actors.alice.address, 0, wrapperAddress)
 
-    // Verify the mock wrapper recorded the wrap call
-    const wrapCount = await wrapper.wrapCallCount()
-    expect(wrapCount).to.eq(1n)
+    // Verify ERC-20 was pulled from alice
+    const aliceBal = await ERC20.balanceOf(actors.alice.address)
+    expect(aliceBal).to.eq(10_000n - AMOUNT)
+
+    // Verify the router approved the wrapper
+    const routerAllowance = await ERC20.allowance(routerAddress, wrapperAddress)
+    expect(routerAllowance).to.eq(AMOUNT)
   })
 
   // ── unwrap ────────────────────────────────────────────────────────────────────
 
-  it('unwrap() delegates to the official ERC-7984 wrapper and emits Unwrapped', async function () {
-    const AMOUNT = 200n
-
-    const encInput = await fhevm
-      .createEncryptedInput(routerAddress, actors.alice.address)
-      .add64(AMOUNT)
-      .encrypt()
-
+  it('unwrap() emits Unwrapped event', async function () {
     await expect(
-      router.connect(actors.alice).unwrap(0, encInput.handles[0], encInput.inputProof),
+      router.connect(actors.alice).unwrap(0, 200n),
     )
       .to.emit(router, 'Unwrapped')
       .withArgs(actors.alice.address, 0, wrapperAddress)
-
-    const unwrapCount = await wrapper.unwrapCallCount()
-    expect(unwrapCount).to.eq(1n)
   })
 
   // ── grantDecryptPermit ────────────────────────────────────────────────────────
@@ -238,12 +227,8 @@ describe('AnimaRegistryRouter', function () {
   // ── invalid pair ──────────────────────────────────────────────────────────────
 
   it('wrap() reverts on invalid pairId', async function () {
-    const enc = await fhevm
-      .createEncryptedInput(routerAddress, actors.alice.address)
-      .add64(1n)
-      .encrypt()
     await expect(
-      router.connect(actors.alice).wrap(999, enc.handles[0], enc.inputProof),
+      router.connect(actors.alice).wrap(999, 1n),
     ).to.be.reverted
   })
 })

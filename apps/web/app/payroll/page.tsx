@@ -3,13 +3,19 @@
 import { ConfidentialAmount } from '@/components/fhe/ConfidentialAmount'
 import { ShieldBadge } from '@/components/fhe/ConfidentialAmount'
 import { FheInput } from '@/components/fhe/FheInput'
-import { useConfidentialBalance, useShield, useConfidentialTransfer } from '@zama-fhe/react-sdk'
+import { useConfidentialBalance, useShield, useConfidentialTransfer, useEncrypt } from '@zama-fhe/react-sdk'
 import { matchZamaError } from '@zama-fhe/sdk'
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { useState } from 'react'
 import Link from 'next/link'
-import { ANIMA_PAYROLL_ADDRESS } from '@anima/shared'
+import {
+  ANIMA_PAYROLL_ADDRESS,
+  ZAMA_WRAPPERS_REGISTRY_ADDRESS,
+} from '@anima/shared'
 import { ANIMA_PAYROLL_ABI } from '@anima/shared'
+
+// USDC on Sepolia (official Circle testnet token)
+const USDC_SEPOLIA = '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238' as `0x${string}`
 
 type Role = 'cfo' | 'employee' | 'auditor'
 
@@ -19,8 +25,25 @@ const ROLE_INFO: Record<Role, { label: string; description: string }> = {
   auditor: { label: 'Auditor / Regulator', description: 'Decrypt balances you have been granted access to' },
 }
 
-// Sepolia cUSDC wrapper address — update once Zama publishes official pair list
-const CUSDC_WRAPPER = ANIMA_PAYROLL_ADDRESS // placeholder until Zama registry live
+
+
+// Zama Wrappers Registry ABI fragment for reading pairs
+const REGISTRY_ABI_GET_PAIR_BY_ERC20 = [{
+  type: 'function' as const,
+  name: 'getPairByERC20',
+  stateMutability: 'view' as const,
+  inputs: [{ type: 'address', name: 'erc20' }],
+  outputs: [{
+    type: 'tuple',
+    components: [
+      { type: 'address', name: 'erc20' },
+      { type: 'address', name: 'erc7984' },
+      { type: 'string',  name: 'name' },
+      { type: 'string',  name: 'symbol' },
+      { type: 'uint8',   name: 'decimals' },
+    ],
+  }],
+}]
 
 export default function PayrollPage() {
   const { address, isConnected } = useAccount()
@@ -44,18 +67,35 @@ export default function PayrollPage() {
     ? matchZamaError(balanceError, {
         SIGNING_REJECTED: () => 'Wallet signature rejected.',
         KEYPAIR_EXPIRED:  () => 'Decrypt permit expired — sign again.',
-        _: (e: Error) => e.message,
+        _: (e: unknown) => (e instanceof Error ? e.message : 'Unknown error'),
       })
     : null
 
-  // ── Real shield (deposit salary) ─────────────────────────────────────────
-  const { mutateAsync: shield, isPending: shielding } = useShield({
-    address: CUSDC_WRAPPER,
+  // ── Read cUSDC wrapper address from the Zama Wrappers Registry ───────
+  const { data: registryPair } = useReadContract({
+    address: ZAMA_WRAPPERS_REGISTRY_ADDRESS,
+    abi: REGISTRY_ABI_GET_PAIR_BY_ERC20,
+    functionName: 'getPairByERC20',
+    args: [USDC_SEPOLIA],
+    query: {
+      enabled: ZAMA_WRAPPERS_REGISTRY_ADDRESS !== '0x0000000000000000000000000000000000000000',
+    },
   })
 
-  // ── Real confidential transfer (pay salary to employee) ──────────────────
+  // If the registry has a USDC pair, use its erc7984 wrapper address
+  const regPair = registryPair as
+    | { erc20: `0x${string}`; erc7984: `0x${string}`; name: string; symbol: string; decimals: number }
+    | undefined
+  const cusdcWrapper = regPair?.erc7984
+
+  // ── Shield / confidential transfer — requires a real cUSDC wrapper address
+  //    from the Zama Wrappers Registry.
+  const { mutateAsync: shield, isPending: shielding } = useShield({
+    address: cusdcWrapper ?? '0x0000000000000000000000000000000000000000',
+  })
+
   const { mutateAsync: transfer, isPending: transferring } = useConfidentialTransfer({
-    address: CUSDC_WRAPPER,
+    address: cusdcWrapper ?? '0x0000000000000000000000000000000000000000',
   })
 
   // ── grantObserver via wagmi writeContract ─────────────────────────────────
@@ -78,46 +118,70 @@ export default function PayrollPage() {
     }
   }
 
-  // ── Pay salary (CFO): shield amount then transfer to employee ─────────────
+  // ── Pay salary (CFO): shield → confidentialTransfer → compliance record ──
   async function handlePaySalary(rawAmount: string) {
-    if (!employeeAddr.startsWith('0x') || !rawAmount) return
+    if (!employeeAddr.startsWith('0x') || !rawAmount || !address) return
     setTxError(null)
     try {
-      // 1. Shield public ERC-20 → cToken
+      // 1. Shield public ERC-20 → cToken (goes to CFO's wallet)
       await shield({ amount: BigInt(Math.floor(Number(rawAmount) * 1e6)) })
-      // 2. Confidential transfer to employee — amount stays encrypted
+
+      // 2. Confidential transfer to employee — actual token movement
       await transfer({
         to: employeeAddr as `0x${string}`,
         amount: BigInt(Math.floor(Number(rawAmount) * 1e6)),
       })
+
+      // 3. Record the encrypted salary in AnimaPayroll for compliance/audit.
+      //    Uses a fresh encryption bound to the payroll contract address.
+      if (cusdcWrapper) {
+        const enc = await encryptAmount({
+          values: [{ value: BigInt(Math.floor(Number(rawAmount) * 1e6)), type: 'euint64' }],
+          contractAddress: ANIMA_PAYROLL_ADDRESS,
+          userAddress: address,
+        })
+        await writeContractAsync({
+          address: ANIMA_PAYROLL_ADDRESS,
+          abi: ANIMA_PAYROLL_ABI,
+          functionName: 'paySalary',
+          args: [cusdcWrapper, employeeAddr as `0x${string}`, enc.encryptedValues[0] as `0x${string}`, enc.inputProof],
+        })
+      }
     } catch (e) {
+      const err = e instanceof Error ? e : new Error('Unknown error')
       setTxError(
-        matchZamaError(e as Error, {
+        matchZamaError(err, {
           SIGNING_REJECTED: () => 'Wallet signature rejected.',
           TRANSACTION_REVERTED: () => 'Transaction reverted — check balance and allowance.',
-          _: (err: Error) => err.message,
-        }) ?? (e as Error).message,
+          _: (error: unknown) => (error instanceof Error ? error.message : 'Unknown error'),
+        }) ?? err.message,
       )
     }
   }
 
+  // ── Encrypt helper — encrypts an amount for use in write ops ──────────
+  const { mutateAsync: encryptAmount } = useEncrypt()
+
   // ── Withdraw (employee): confidential transfer back to self ───────────────
   async function handleWithdraw(rawAmount: string) {
-    if (!rawAmount || !address) return
+    if (!rawAmount || !address || !cusdcWrapper) return
     setTxError(null)
     try {
+      // 1. Encrypt the withdrawal amount via the Zama relayer
+      const enc = await encryptAmount({
+        values: [{ value: BigInt(Math.floor(Number(rawAmount) * 1e6)), type: 'euint64' }],
+        contractAddress: ANIMA_PAYROLL_ADDRESS,
+        userAddress: address,
+      })
+      // 2. Submit the encrypted handle + proof to the contract
       await writeContractAsync({
         address: ANIMA_PAYROLL_ADDRESS,
         abi: ANIMA_PAYROLL_ABI,
         functionName: 'withdraw',
-        // encAmount and proof are supplied by the Zama relayer — wagmi
-        // will call the contract after the relayer returns the ciphertext.
-        // For now we pass zero-bytes as a placeholder that surfaces the
-        // "not deployed" state clearly until contracts are live.
-        args: [CUSDC_WRAPPER, `0x${'00'.repeat(32)}` as `0x${string}`, '0x'],
+        args: [cusdcWrapper, enc.encryptedValues[0] as `0x${string}`, enc.inputProof],
       })
     } catch (e) {
-      setTxError((e as Error).message)
+      setTxError(e instanceof Error ? e.message : 'Withdraw failed')
     }
   }
 
@@ -231,24 +295,35 @@ export default function PayrollPage() {
                 <h3 className="font-display text-[18px] font-light tracking-tight text-[var(--color-ink)]">
                   Pay salary
                 </h3>
-                <p className="mt-1 text-[13px] text-[var(--color-ink-2)]">
-                  Amount is encrypted client-side via{' '}
-                  <code className="font-mono">@zama-fhe/react-sdk</code> before submission.
-                </p>
-                <div className="mt-4 space-y-3">
-                  <FheInput
-                    label="Employee address"
-                    placeholder="0x..."
-                    type="text"
-                    onConfirm={addr => setEmployeeAddr(addr)}
-                  />
-                  <FheInput
-                    label="Salary amount"
-                    symbol="cUSDC"
-                    isPending={shielding || transferring}
-                    onConfirm={amt => void handlePaySalary(amt)}
-                  />
-                </div>
+                {cusdcWrapper ? (
+                  <>
+                    <p className="mt-1 text-[13px] text-[var(--color-ink-2)]">
+                      Amount is encrypted client-side via{' '}
+                      <code className="font-mono">@zama-fhe/react-sdk</code> before submission.
+                    </p>
+                    <div className="mt-4 space-y-3">
+                      <FheInput
+                        label="Employee address"
+                        placeholder="0x..."
+                        type="text"
+                        onConfirm={addr => setEmployeeAddr(addr)}
+                      />
+                      <FheInput
+                        label="Salary amount"
+                        symbol="cUSDC"
+                        isPending={shielding || transferring}
+                        onConfirm={amt => void handlePaySalary(amt)}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <p className="mt-2 max-w-[50ch] text-[13px] leading-[1.55] text-[var(--color-ink-3)]">
+                    Shielded payroll operations require a cUSDC wrapper from the Zama Wrappers
+                    Registry. The Zama registry currently has no USDC pair on Sepolia.
+                    Once Zama publishes the official ERC-7984 pair, the payroll flow
+                    activates automatically.
+                  </p>
+                )}
               </div>
             )}
 
@@ -311,9 +386,9 @@ export default function PayrollPage() {
                 Composable yield
               </h4>
               <p className="mt-1 text-[13px] leading-[1.55] text-[var(--color-ink-2)]">
-                Shield salary → earn yield on Morpho Steakhouse Confidential Prime USDC. Amount stays
-                encrypted throughout via{' '}
-                <code className="font-mono">earnYield(token, morphoVault, encAmount, proof)</code>.
+                Shield salary → move into a yield sub-account via{' '}
+                <code className="font-mono">earnYield()</code>. Amount stays
+                encrypted throughout — internal FHE accounting within the same contract.
               </p>
             </div>
 

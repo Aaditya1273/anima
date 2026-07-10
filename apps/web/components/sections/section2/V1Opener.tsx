@@ -32,7 +32,7 @@ const CHAPTERS: Chapter[] = [
   {
     numeral: 'III',
     headline: 'Earn while encrypted.',
-    body: 'Shielded salary deposits into Morpho Steakhouse Confidential Prime USDC vault. The amount stays encrypted through the entire deposit, yield accrual, and withdrawal. Composability without compromise.',
+    body: 'Shielded salary moves into a separate yield sub-account. The amount stays encrypted through the entire deposit, yield tracking, and withdrawal. Composability without compromise.',
   },
   {
     numeral: 'IV',

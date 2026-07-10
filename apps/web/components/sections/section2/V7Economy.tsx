@@ -55,7 +55,7 @@ function VaultPane() {
       <div className="mt-4 space-y-1.5 border-t border-[var(--color-border)] pt-3">
         <Row label="Active Employees" value={`${PAYROLL_STATS.activeEmployees}`} />
         <Row label="Salaries Paid" value={`${PAYROLL_STATS.totalSalariesPaid}`} />
-        <Row label="Yield Vault" value="Steakhouse cPrime USDC" />
+        <Row label="Yield Sub-Account" value="Internal FHE accounting" />
         <Row label="Pending Yield" value={PAYROLL_STATS.pendingYieldDeposits === 1 ? '1 deposit' : '0'} />
       </div>
       <Refresh />

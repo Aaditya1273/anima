@@ -51,9 +51,9 @@ const NODES = [
     address: CONTRACTS_META.animaDisperse.address,
   },
   {
-    id: 'morpho',
-    label: 'Morpho',
-    sub: 'cPrime USDC · composability',
+    id: 'yield-sub',
+    label: 'Yield Sub-Account',
+    sub: 'internal FHE accounting',
     x: 70,
     y: 420,
     role: 'external',
@@ -90,7 +90,7 @@ const EDGES: Array<{ from: string; to: string; particle: string }> = [
   { from: 'anima', to: 'sepolia', particle: 'cursor' },
   { from: 'anima', to: 'registry', particle: 'envelope' },
   { from: 'anima', to: 'disperse', particle: 'gavel' },
-  { from: 'payroll', to: 'morpho', particle: 'envelope' },
+  { from: 'payroll', to: 'yield-sub', particle: 'envelope' },
   { from: 'disperse', to: 'tokenops', particle: 'gavel' },
   { from: 'relayer', to: 'anima', particle: 'cursor' },
   { from: 'fheSdk', to: 'anima', particle: 'cursor' },
@@ -142,7 +142,7 @@ export function Mindmap() {
           <title>Anima on-chain architecture</title>
           <desc>
             Anima contracts at the center connected to AnimaPayroll, AnimaRegistryRouter,
-            AnimaDisperse, Zama FHEVM co-processor, Ethereum Sepolia, Morpho vault,
+            AnimaDisperse, Zama FHEVM co-processor, Ethereum Sepolia, yield sub-account,
             TokenOps SDK, Zama Relayer, and @zama-fhe/react-sdk.
           </desc>
           <defs>

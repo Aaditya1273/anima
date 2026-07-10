@@ -45,9 +45,8 @@ async function deployFixture() {
   await disperse.waitForDeployment()
   const disperseAddress = await disperse.getAddress()
 
-  // Fund distributor
+  // Fund distributor with mock tokens (tokens are moved via FHERC20 directly)
   await token.connect(actors.deployer).mintClear(actors.distributor.address, 100_000n)
-  await token.connect(actors.distributor).approveEncrypted(disperseAddress)
 
   return { actors, token, tokenAddress, disperse, disperseAddress }
 }
@@ -233,7 +232,9 @@ describe('AnimaDisperse', function () {
     tx = await disperse.connect(actors.alice).requestDecryptPermit(0n)
     await tx.wait()
 
-    await expect(disperse.connect(actors.alice).claim(0n))
+    // Re-encrypt the claimed amount
+    const encClaim = await encryptAmount(disperseAddress, actors.alice, 1000n)
+    await expect(disperse.connect(actors.alice).claim(0n, encClaim.handles[0], encClaim.inputProof))
       .to.emit(disperse, 'Claimed')
       .withArgs(0n, actors.alice.address)
 
@@ -253,10 +254,14 @@ describe('AnimaDisperse', function () {
       )
     await tx.wait()
 
-    tx = await disperse.connect(actors.alice).claim(0n)
+    tx = await disperse.connect(actors.alice).requestDecryptPermit(0n)
     await tx.wait()
 
-    await expect(disperse.connect(actors.alice).claim(0n)).to.be.revertedWith(
+    const encClaim = await encryptAmount(disperseAddress, actors.alice, 100n)
+    tx = await disperse.connect(actors.alice).claim(0n, encClaim.handles[0], encClaim.inputProof)
+    await tx.wait()
+
+    await expect(disperse.connect(actors.alice).claim(0n, encClaim.handles[0], encClaim.inputProof)).to.be.revertedWith(
       'AnimaDisperse: already claimed',
     )
   })
@@ -278,7 +283,8 @@ describe('AnimaDisperse', function () {
       )
     await tx.wait()
 
-    await expect(disperse.connect(actors.alice).claim(0n)).to.be.revertedWith(
+    const encBeforeCliff = await encryptAmount(disperseAddress, actors.alice, 500n)
+    await expect(disperse.connect(actors.alice).claim(0n, encBeforeCliff.handles[0], encBeforeCliff.inputProof)).to.be.revertedWith(
       'AnimaDisperse: cliff not reached',
     )
   })
@@ -300,7 +306,12 @@ describe('AnimaDisperse', function () {
 
     await timeTravel(CLIFF + 1)
 
-    await expect(disperse.connect(actors.alice).claim(0n))
+    // Alice needs decrypt permit before claiming
+    let tx4 = await disperse.connect(actors.alice).requestDecryptPermit(0n)
+    await tx4.wait()
+
+    const encAfterCliff = await encryptAmount(disperseAddress, actors.alice, 500n)
+    await expect(disperse.connect(actors.alice).claim(0n, encAfterCliff.handles[0], encAfterCliff.inputProof))
       .to.emit(disperse, 'Claimed')
       .withArgs(0n, actors.alice.address)
   })
@@ -329,7 +340,12 @@ describe('AnimaDisperse', function () {
     tx = await disperse.connect(actors.alice).requestDecryptPermit(0n)
     await tx.wait()
 
-    tx = await disperse.connect(actors.alice).claim(0n)
+    tx = await disperse.connect(actors.alice).requestDecryptPermit(0n)
+    await tx.wait()
+
+    // Re-encrypt the claimable amount (~500 = half of 1000)
+    const encPartial = await encryptAmount(disperseAddress, actors.alice, 500n)
+    tx = await disperse.connect(actors.alice).claim(0n, encPartial.handles[0], encPartial.inputProof)
     await tx.wait()
 
     // The allocation remaining should be ~half (within 1% tolerance due to FHE shift)
@@ -414,7 +430,8 @@ describe('AnimaDisperse', function () {
       .cancel(0n, [actors.alice.address], [encCancel.handles[0]], [encCancel.inputProof])
     await tx.wait()
 
-    await expect(disperse.connect(actors.alice).claim(0n)).to.be.revertedWith(
+    const encInactive = await encryptAmount(disperseAddress, actors.alice, 100n)
+    await expect(disperse.connect(actors.alice).claim(0n, encInactive.handles[0], encInactive.inputProof)).to.be.revertedWith(
       'AnimaDisperse: inactive distribution',
     )
   })

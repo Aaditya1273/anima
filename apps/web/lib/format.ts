@@ -24,14 +24,3 @@ export function formatRelativeTime(secondsAgo: number): string {
   return `${Math.floor(secondsAgo / 86400)}d ago`
 }
 
-export function formatBalanceOG(weiBigInt: bigint, decimals = 4): string {
-  // 0G has 18 decimals like ETH.
-  const negative = weiBigInt < 0n
-  const w = negative ? -weiBigInt : weiBigInt
-  const base = 10n ** 18n
-  const whole = w / base
-  const frac = w % base
-  const fracStr = frac.toString().padStart(18, '0').slice(0, decimals).replace(/0+$/, '')
-  const sign = negative ? '-' : ''
-  return fracStr ? `${sign}${whole}.${fracStr}` : `${sign}${whole}`
-}

@@ -2,6 +2,11 @@ import { DocsMobileNav } from '@/components/docs/DocsMobileNav'
 import { getNavTree } from '@/lib/docs'
 import Link from 'next/link'
 
+// ISR: revalidate docs overview every hour
+const REVALIDATE_SECONDS = 3600
+
+export const revalidate = REVALIDATE_SECONDS
+
 export const metadata = {
   title: 'docs · anima',
   description: 'How anima works, end to end. Install, architecture, every layer.',

@@ -16,7 +16,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
 // Sepolia testnet relayer (open, no key required)
-const SEPOLIA_RELAYER  = 'https://relayer.testnet.zama.ai'
+const SEPOLIA_RELAYER  = 'https://relayer.testnet.zama.org/v2'
 // Mainnet relayer (API key required)
 const MAINNET_RELAYER  = 'https://relayer.zama.ai'
 

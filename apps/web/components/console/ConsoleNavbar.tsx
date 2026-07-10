@@ -89,40 +89,10 @@ export function ConsoleNavbar() {
             >
               Docs
             </Link>
-            {siwe.status === 'authenticated' ? (
-              <Link
-                href="/console/chat"
-                aria-label="Chat (new feature)"
-                className="group inline-flex items-baseline gap-1 rounded-full bg-[color-mix(in_oklab,var(--color-ink)_7%,transparent)] py-1.5 pl-3.5 pr-2.5 text-[14px] font-medium tracking-[-0.005em] text-[var(--color-ink)] transition-colors duration-200 hover:bg-[color-mix(in_oklab,var(--color-ink)_10%,transparent)] hover:text-[var(--color-ink-2)]"
-              >
-                Chat
-                <span
-                  className="font-italic-serif relative -top-[6px] text-[10.5px] italic leading-none text-[var(--color-ink-3)] transition-colors duration-200 group-hover:text-[var(--color-ink-2)]"
-                  aria-hidden
-                >
-                  new
-                </span>
-              </Link>
-            ) : null}
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* Mobile-only chat entry — the center nav (with the beside-Docs
-                Chat link) is hidden below md, so phones reach chat from here. */}
-            {siwe.status === 'authenticated' && siwe.address ? (
-              <Link
-                href="/console/chat"
-                aria-label="Chat (new feature)"
-                className="group inline-flex items-baseline gap-1 rounded-full bg-[color-mix(in_oklab,var(--color-ink)_7%,transparent)] py-1.5 pl-3 pr-2.5 text-[13px] font-medium tracking-[-0.005em] text-[var(--color-ink)] transition-colors active:bg-[color-mix(in_oklab,var(--color-ink)_10%,transparent)] md:hidden"
-              >
-                Chat
-                <span
-                  className="font-italic-serif relative -top-[5px] text-[10px] italic leading-none text-[var(--color-ink-3)]"
-                  aria-hidden
-                >
-                  new
-                </span>
-              </Link>
-            ) : null}
+            {/* Mobile-only chat entry removed — chat feature pending */}
+            {null}
             {right}
           </div>
         </div>

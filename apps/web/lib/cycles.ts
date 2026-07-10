@@ -1,5 +1,13 @@
 /**
  * 4 hero cycles for the Zama FHE / confidential finance narrative.
+ *
+ * 🚨 ILLUSTRATIVE DEMO CONTENT
+ * The tool calls, replies, tx hashes, and amounts below are synthetic
+ * marketing examples. They demonstrate the intended UX flow of the
+ * confidential finance contracts but do not represent real on-chain
+ * state. The tx hashes are randomly generated placeholders — they
+ * will not resolve on Sepolia Etherscan.
+ *
  * Each cycle has:
  * - surface: TUI vs TG (drives chat aesthetic)
  * - prompt: the natural-language operator prompt
@@ -76,7 +84,7 @@ export const CYCLES: Cycle[] = [
       { tool: 'fhe.allow', args: 'auditor access granted', status: 'ok' },
       { tool: 'memory.save', args: '/vault/payroll/2026-07-08', status: 'ok' },
     ],
-    reply: `Salary shielded.\n\n**5,000 USDC** deposited into AnimaPayroll for employee **0x742d…3eB1**\n\nBalance stored as **euint64** on Ethereum Sepolia — no plaintext ever touches the chain.\n\n**Decrypt permissions:**\n- Employee: ✅ can decrypt their own balance via EIP-712\n- CFO: ✅ can see encrypted aggregate only\n- Auditor 0x8f3c…2aD1: ✅ selective disclosure granted\n\nTx: sepolia.etherscan.io/tx/0x8a3c…1129\n\nOne FIAT payroll run leaked salary data across 70,000 employees. Anima makes every employee's pay visible to only them.`,
+    reply: `Salary shielded.\n\n**5,000 USDC** deposited into AnimaPayroll for employee **0x742d…3eB1**\n\nBalance stored as **euint64** on Ethereum Sepolia — no plaintext ever touches the chain.\n\n**Decrypt permissions:**\n- Employee: ✅ can decrypt their own balance via EIP-712\n- CFO: ✅ can see encrypted aggregate only\n- Auditor 0x8f3c…2aD1: ✅ selective disclosure granted\n\nTx: sepolia.etherscan.io/tx/[tx-hash]\n\nOne FIAT payroll run leaked salary data across 70,000 employees. Anima makes every employee's pay visible to only them.`,
     artifact: {
       type: 'research',
       title: 'Confidential Payroll · field report',
@@ -108,14 +116,14 @@ export const CYCLES: Cycle[] = [
       { tool: 'fhe.allow', args: 'recipient decrypt permit', status: 'ok' },
       { tool: 'memory.save', args: '/transfers/2026-07-08', status: 'ok' },
     ],
-    reply: `Confidential transfer complete.\n\n**2,000 USDC** wrapped → cUSDC via AnimaRegistryRouter\n**500 cUSDC** transferred confidentially to 0xC635…87Ec\n\n**Route:**\nUSDC → ERC-7984 wrapper → encrypted euint64 balance → FHE.sub(sender) + FHE.add(recipient)\n\n**Recipient can decrypt** via one EIP-712 signature in their wallet. Only they see the amount.\n\nRemaining cUSDC balance: 1,500\n\nTx: sepolia.etherscan.io/tx/0x9b4d…b8c\n\nPublic airdrops expose amounts to MEV bots. Anima keeps every transfer confidential.`,
+    reply: `Confidential transfer complete.\n\n**2,000 USDC** wrapped → cUSDC via AnimaRegistryRouter\n**500 cUSDC** transferred confidentially to 0xC635…87Ec\n\n**Route:**\nUSDC → ERC-7984 wrapper → encrypted euint64 balance → FHE.sub(sender) + FHE.add(recipient)\n\n**Recipient can decrypt** via one EIP-712 signature in their wallet. Only they see the amount.\n\nRemaining cUSDC balance: 1,500\n\nTx: sepolia.etherscan.io/tx/[tx-hash]\n\nPublic airdrops expose amounts to MEV bots. Anima keeps every transfer confidential.`,
     artifact: {
       type: 'swap',
       fromAmount: '2,000',
       fromSymbol: 'USDC',
       toAmount: '1,500',
       toSymbol: 'cUSDC',
-      txHash: '0x9b4d5f6a7c8e9f0a1b2c3d4e5f6a7b8c',
+      txHash: '[tx-hash]',
       newBalance: '1,500 cUSDC',
     },
     painting: 'cloud-islands',
@@ -136,21 +144,21 @@ export const CYCLES: Cycle[] = [
       { tool: 'chain.tx', args: '0x3ebd…772a', status: 'ok' },
       { tool: 'memory.save', args: '/distributions/airdrop-001', status: 'ok' },
     ],
-    reply: `Confidential airdrop created on AnimaDisperse.\n\n**10,000 cUSDC** distributed across **12 recipients**\n\n**Vesting schedule (all encrypted):**\n- Cliff: 30 days (no claims before)\n- Linear vesting: 180 days (pro-rata unlock daily)\n\n**On-chain visibility:**\n- Total amount: 🔒 encrypted\n- Recipient amounts: 🔒 individually encrypted (euint64 per address)\n- Schedule: 🔒 encrypted cliff + linear parameters\n\nEach recipient visits /disperse/[distId], connects wallet, signs EIP-712 → sees only their own allocation.\n\nDistribution ID: 3\nTx: sepolia.etherscan.io/tx/0x3ebd…772a\n\nPublic airdrops cause -17% average price drop in 72h from MEV front-runs. Anima makes distribution amounts invisible.`,
+    reply: `Confidential airdrop created on AnimaDisperse.\n\n**10,000 cUSDC** distributed across **12 recipients**\n\n**Vesting schedule (all encrypted):**\n- Cliff: 30 days (no claims before)\n- Linear vesting: 180 days (pro-rata unlock daily)\n\n**On-chain visibility:**\n- Total amount: 🔒 encrypted\n- Recipient amounts: 🔒 individually encrypted (euint64 per address)\n- Schedule: 🔒 encrypted cliff + linear parameters\n\nEach recipient visits /disperse/[distId], connects wallet, signs EIP-712 → sees only their own allocation.\n\nDistribution ID: 3\nTx: sepolia.etherscan.io/tx/[tx-hash]\n\nPublic airdrops cause -17% average price drop in 72h from MEV front-runs. Anima makes distribution amounts invisible.`,
     artifact: {
       type: 'audit',
       jobId: '3',
       agent: 'AnimaDisperse',
       bidAmount: '10,000 cUSDC',
       status: 'created',
-      reportHash: '0x8f3c7e9118db44dd8a2e34c10f4bc11129',
-      txHash: '0x3ebd9f5cc2118c3ad33c3d50918e2772a',
+      reportHash: '[report-hash]',
+      txHash: '[tx-hash]',
     },
     painting: 'mountain-vista',
     durationMs: 10500,
   },
 
-  // ─── Cycle 4 , TG · earn yield on Morpho ─────────────────────────────
+  // ─── Cycle 4 , TG · earn yield on yield sub-account ─────────────────────
   {
     id: 'stake',
     surface: 'tg',
@@ -158,22 +166,22 @@ export const CYCLES: Cycle[] = [
       prompt: 'hi there',
       reply: 'hi 👋 ready when you are',
     },
-    prompt: 'shield 3,000 USDC into the Morpho Steakhouse Confidential Prime vault to earn yield',
+    prompt: 'shield 3,000 USDC into the internal yield sub-account to earn yield',
     toolStream: [
       { tool: 'chain.balance', args: 'USDC', status: 'ok' },
       { tool: 'fhe.encrypt', args: '3,000 USDC → externalEuint64', status: 'ok' },
-      { tool: 'contract.earnYield', args: '3,000 USDC → Morpho vault', status: 'ok' },
+      { tool: 'contract.earnYield', args: '3,000 USDC → yield sub-account', status: 'ok' },
       { tool: 'chain.tx', args: '0x771a…c8e0', status: 'ok' },
       { tool: 'memory.save', args: '/vault/yield-positions/2026-07-08', status: 'ok' },
     ],
-    reply: `Yield position opened on Morpho.\n\n**3,000 USDC** shielded into **Steakhouse Confidential Prime USDC** vault\nAmount stays encrypted as euint64 through the entire deposit cycle.\n\n**Composability proof:**\nBalance → FHE.fromExternal → FHE.add(vault.balance) → Morpho deposit\nNo decryption at any step.\n\nEstimated APY: 6.2%\nProjected earnings: ~186 USDC/year\n\nYour vault balance: 3,000 cUSDC (encrypted)\nTotal shielded across all surfaces: **66.4K USDC**\n\nTx: sepolia.etherscan.io/tx/0x771a…c8e0\n\nDeFi with compliance: earn yield without ever exposing your position to the public ledger.`,
+    reply: `Yield position opened.\n\n**3,000 USDC** shielded into the internal yield sub-account.\nAmount stays encrypted as euint64 through the entire deposit cycle.\n\n⚠️ Illustrative example — this is internal FHE accounting within AnimaPayroll. A yield-bearing vault integration would require deploying an external vault that accepts ERC-7984 handle deposits.\n\nYour yield balance: 3,000 cUSDC (encrypted)\n\nTx: sepolia.etherscan.io/tx/[tx-hash]\n\nDeFi with compliance: earn yield without ever exposing your position to the public ledger.`,
     artifact: {
       type: 'stake',
       position: '3,000 cUSDC',
-      validator: 'Steakhouse Prime',
-      apr: '6.2%',
-      unlockBlock: 6_381_201,
-      txHash: '0x771a8e44c0d3294411fefc7b87c8e0',
+      validator: 'Yield Sub-Account (internal FHE accounting)',
+      apr: '—',
+      unlockBlock: 0,
+      txHash: '[tx-hash]',
     },
     painting: 'tower',
     durationMs: 10000,

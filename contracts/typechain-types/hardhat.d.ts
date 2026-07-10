@@ -90,21 +90,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.AnimaDisperse__factory>;
     getContractFactory(
-      name: "IFHERC20Transfer",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IFHERC20Transfer__factory>;
-    getContractFactory(
       name: "AnimaPayroll",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.AnimaPayroll__factory>;
-    getContractFactory(
-      name: "IFHERC20",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IFHERC20__factory>;
-    getContractFactory(
-      name: "IMorphoConfidentialVault",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IMorphoConfidentialVault__factory>;
     getContractFactory(
       name: "AnimaRegistryRouter",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -230,25 +218,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.AnimaDisperse>;
     getContractAt(
-      name: "IFHERC20Transfer",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IFHERC20Transfer>;
-    getContractAt(
       name: "AnimaPayroll",
       address: string | ethers.Addressable,
       signer?: ethers.Signer
     ): Promise<Contracts.AnimaPayroll>;
-    getContractAt(
-      name: "IFHERC20",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IFHERC20>;
-    getContractAt(
-      name: "IMorphoConfidentialVault",
-      address: string | ethers.Addressable,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IMorphoConfidentialVault>;
     getContractAt(
       name: "AnimaRegistryRouter",
       address: string | ethers.Addressable,
@@ -362,21 +335,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.AnimaDisperse>;
     deployContract(
-      name: "IFHERC20Transfer",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IFHERC20Transfer>;
-    deployContract(
       name: "AnimaPayroll",
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.AnimaPayroll>;
-    deployContract(
-      name: "IFHERC20",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IFHERC20>;
-    deployContract(
-      name: "IMorphoConfidentialVault",
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IMorphoConfidentialVault>;
     deployContract(
       name: "AnimaRegistryRouter",
       signerOrOptions?: ethers.Signer | DeployContractOptions
@@ -502,25 +463,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.AnimaDisperse>;
     deployContract(
-      name: "IFHERC20Transfer",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IFHERC20Transfer>;
-    deployContract(
       name: "AnimaPayroll",
       args: any[],
       signerOrOptions?: ethers.Signer | DeployContractOptions
     ): Promise<Contracts.AnimaPayroll>;
-    deployContract(
-      name: "IFHERC20",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IFHERC20>;
-    deployContract(
-      name: "IMorphoConfidentialVault",
-      args: any[],
-      signerOrOptions?: ethers.Signer | DeployContractOptions
-    ): Promise<Contracts.IMorphoConfidentialVault>;
     deployContract(
       name: "AnimaRegistryRouter",
       args: any[],

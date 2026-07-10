@@ -2,11 +2,11 @@
 
 import 'server-only'
 import { http, type Address, type Hex, createPublicClient } from 'viem'
+import { sepolia } from 'viem/chains'
 import { type SiweMessage, parseSiweMessage, verifySiweMessage } from 'viem/siwe'
-import { zgMainnet } from '../chain/chain'
 
 const publicClient = createPublicClient({
-  chain: zgMainnet,
+  chain: sepolia,
   transport: http(),
 })
 

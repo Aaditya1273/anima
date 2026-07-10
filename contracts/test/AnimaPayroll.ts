@@ -246,7 +246,7 @@ describe('AnimaPayroll', function () {
     expect(clearBalance).to.eq(SALARY - WITHDRAW)
   })
 
-  it('FHE guard — over-withdrawal leaves balance unchanged', async function () {
+  it('FHE guard — over-withdrawal leaves balance unchanged (cmux)', async function () {
     const SALARY = 200n
     const OVER = 500n // more than balance
 
@@ -266,12 +266,12 @@ describe('AnimaPayroll', function () {
       .createEncryptedInput(payrollAddress, actors.alice.address)
       .add64(OVER)
       .encrypt()
-    tx = await payroll
+    await payroll
       .connect(actors.alice)
       .withdraw(tokenAddress, encW.handles[0], encW.inputProof)
     await tx.wait()
 
-    // Balance unchanged — FHE.select kept original value
+    // Balance unchanged — FHE.select cmux kept original value
     const encHandle = await payroll.connect(actors.alice).getBalance(tokenAddress)
     const clearBalance = await fhevm.userDecryptEuint(
       FhevmType.euint64,

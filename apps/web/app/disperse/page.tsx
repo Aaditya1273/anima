@@ -1,92 +1,41 @@
 'use client'
 
+import { RecipientImport, type RecipientItem } from '@/components/disperse/RecipientImport'
+import { RiskCalculator } from '@/components/disperse/RiskCalculator'
+import { VestingSchedule } from '@/components/disperse/VestingSchedule'
 import { ShieldBadge } from '@/components/fhe/ConfidentialAmount'
 import { ConfidentialAmount } from '@/components/fhe/ConfidentialAmount'
-import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
-import { useState, useRef, useCallback } from 'react'
-import Link from 'next/link'
 import {
-  createConfidentialAirdrop,
-  estimateMevExposure,
-  resetTokenOpsClient,
   type TokenOpsRecipient,
+  createConfidentialAirdrop,
+  resetTokenOpsClient,
 } from '@/lib/tokenops/client'
-import {
-  ANIMA_DISPERSE_ADDRESS,
-  ANIMA_PAYROLL_ADDRESS,
-} from '@anima/shared'
-
-type Recipient = { address: string; amount: string }
+import { ANIMA_DISPERSE_ADDRESS, ANIMA_PAYROLL_ADDRESS } from '@anima/shared'
+import Link from 'next/link'
+import { useState } from 'react'
+import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
 
 type DeployState =
   | { status: 'idle' }
-  | { status: 'encrypting' }
-  | { status: 'signing' }
-  | { status: 'broadcasting' }
+  | { status: 'deploying' }
   | { status: 'done'; airdropAddress: `0x${string}`; txHash: string }
   | { status: 'error'; message: string }
 
 export default function DispersePage() {
-  const { address: account, isConnected } = useAccount()
+  const { isConnected } = useAccount()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
-  const [recipients, setRecipients] = useState<Recipient[]>([])
-  const [recipientInput, setRecipientInput] = useState('')
-  const [amountInput, setAmountInput] = useState('')
+  const [recipients, setRecipients] = useState<RecipientItem[]>([])
   const [showVesting, setShowVesting] = useState(false)
-  const [cliffDays, setCliffDays] = useState('0')
-  const [linearDays, setLinearDays] = useState('0')
+  const [cliffDays, setCliffDays] = useState(0)
+  const [linearDays, setLinearDays] = useState(0)
   const [tokenAddress, setTokenAddress] = useState('')
   const [deployState, setDeployState] = useState<DeployState>({ status: 'idle' })
-  const csvRef = useRef<HTMLInputElement>(null)
 
-  // ── helpers ───────────────────────────────────────────────────────────────
-
-  function addRecipient() {
-    if (!recipientInput || !amountInput) return
-    setRecipients(prev => [...prev, { address: recipientInput, amount: amountInput }])
-    setRecipientInput('')
-    setAmountInput('')
-  }
-
-  function removeRecipient(i: number) {
-    setRecipients(prev => prev.filter((_, idx) => idx !== i))
-  }
-
-  // CSV import: each row is "address,amount"
-  const handleCsvFile = useCallback((file: File) => {
-    const reader = new FileReader()
-    reader.onload = e => {
-      const text = (e.target?.result as string) ?? ''
-      const rows = text
-        .split('\n')
-        .map(r => r.trim())
-        .filter(r => r && !r.startsWith('#'))
-      const parsed: Recipient[] = []
-      for (const row of rows) {
-        const [addr, amt] = row.split(',')
-        if (addr?.startsWith('0x') && amt && Number(amt) > 0) {
-          parsed.push({ address: addr.trim(), amount: amt.trim() })
-        }
-      }
-      if (parsed.length > 0) {
-        setRecipients(prev => [...prev, ...parsed])
-      }
-    }
-    reader.readAsText(file)
-  }, [])
-
-  // ── MEV risk (uses real estimateMevExposure) ──────────────────────────────
-
+  // ── MEV risk ──────────────────────────────────────────────────────────────
   const totalRaw = recipients.reduce((s, r) => s + (Number.parseFloat(r.amount) || 0), 0)
-  const totalBigInt = BigInt(Math.floor(totalRaw * 1e6)) // 6-decimal scaled
-  const mev = estimateMevExposure(totalBigInt)
-  const mevDisplay = recipients.length > 0
-    ? `~${(Number(mev.exposedAmount) / 1e6).toFixed(2)} tokens`
-    : '—'
 
   // ── deploy ────────────────────────────────────────────────────────────────
-
   async function handleDeploy() {
     if (!isConnected || !publicClient || !walletClient || recipients.length === 0) return
     const token = (tokenAddress || ANIMA_PAYROLL_ADDRESS) as `0x${string}`
@@ -97,31 +46,30 @@ export default function DispersePage() {
     }))
 
     const vesting =
-      showVesting && (Number(cliffDays) > 0 || Number(linearDays) > 0)
+      showVesting && (cliffDays > 0 || linearDays > 0)
         ? {
-            cliff: Number(cliffDays) * 86400,
-            linear: Number(linearDays) * 86400,
+            cliff: cliffDays * 86400,
+            linear: linearDays * 86400,
           }
         : undefined
 
     try {
-      setDeployState({ status: 'encrypting' })
-      // TokenOps SDK fires status callbacks internally; we mirror them here
-      // by transitioning through states before the final await resolves.
-      const timeoutHandle = setTimeout(() => {
-        setDeployState({ status: 'signing' })
-        setTimeout(() => setDeployState({ status: 'broadcasting' }), 4000)
-      }, 1500)
+      setDeployState({ status: 'deploying' })
+      const result = await createConfidentialAirdrop(
+        {
+          token,
+          recipients: mapped,
+          vestingSchedule: vesting,
+        },
+        publicClient,
+        walletClient,
+      )
 
-      const result = await createConfidentialAirdrop({
-        token,
-        recipients: mapped,
-        vestingSchedule: vesting,
-      }, publicClient, walletClient)
-
-      clearTimeout(timeoutHandle)
-      setDeployState({ status: 'done', airdropAddress: result.airdropAddress, txHash: result.txHash })
-      // Reset singleton so next call picks up any new signer
+      setDeployState({
+        status: 'done',
+        airdropAddress: result.airdropAddress,
+        txHash: result.txHash,
+      })
       resetTokenOpsClient()
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Deployment failed'
@@ -131,16 +79,12 @@ export default function DispersePage() {
 
   const deployLabel = {
     idle: `Deploy distribution (${recipients.length} recipients)`,
-    encrypting: 'Encrypting allocations…',
-    signing: 'Sign in wallet…',
-    broadcasting: 'Broadcasting transaction…',
+    deploying: 'Deploying…',
     done: 'Deployed ✓',
     error: 'Retry deployment',
   }[deployState.status]
 
-  const isPending = ['encrypting', 'signing', 'broadcasting'].includes(deployState.status)
-
-  // ── render ────────────────────────────────────────────────────────────────
+  const isPending = deployState.status === 'deploying'
 
   return (
     <main className="mx-auto max-w-5xl px-6 pt-28 pb-32">
@@ -188,7 +132,6 @@ export default function DispersePage() {
         <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* ── Left: create distribution ─────────────────────────────────── */}
           <div className="lg:col-span-2 space-y-6">
-
             {/* Token address */}
             <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-paper)] p-6">
               <label className="block font-mono text-[11px] tracking-[0.04em] text-[var(--color-ink-3)]">
@@ -203,125 +146,8 @@ export default function DispersePage() {
               />
             </div>
 
-            {/* Add recipients */}
-            <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-paper)] p-6">
-              <h2 className="font-display text-[18px] font-light tracking-tight text-[var(--color-ink)]">
-                Add recipients
-              </h2>
-              <p className="mt-1 text-[13px] text-[var(--color-ink-2)]">
-                Each amount is FHE-encrypted by the TokenOps SDK before it reaches the chain.
-                The full recipient list is never revealed on-chain.
-              </p>
-
-              <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
-                <div className="flex-1">
-                  <label className="block font-mono text-[11px] tracking-[0.04em] text-[var(--color-ink-3)]">
-                    Address (0x...)
-                  </label>
-                  <input
-                    type="text"
-                    value={recipientInput}
-                    onChange={e => setRecipientInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') addRecipient() }}
-                    placeholder="0x..."
-                    className="mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-paper)] px-3 py-2 font-mono text-[13px] text-[var(--color-ink)] outline-none focus:border-[var(--color-ink-2)]"
-                  />
-                </div>
-                <div className="w-full sm:w-36">
-                  <label className="block font-mono text-[11px] tracking-[0.04em] text-[var(--color-ink-3)]">
-                    Amount
-                  </label>
-                  <input
-                    type="number"
-                    value={amountInput}
-                    onChange={e => setAmountInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') addRecipient() }}
-                    placeholder="0.00"
-                    className="mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-paper)] px-3 py-2 font-mono text-[13px] text-[var(--color-ink)] outline-none focus:border-[var(--color-ink-2)]"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={addRecipient}
-                  disabled={!recipientInput || !amountInput}
-                  className="rounded-lg bg-[var(--color-ink)] px-4 py-2 text-[13px] font-medium text-[var(--color-cream)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Add
-                </button>
-              </div>
-
-              {/* CSV import */}
-              <div
-                className="mt-3 cursor-pointer rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-cream)] px-4 py-3 text-center transition-colors hover:border-[var(--color-ink-3)]"
-                onClick={() => csvRef.current?.click()}
-                onDragOver={e => e.preventDefault()}
-                onDrop={e => {
-                  e.preventDefault()
-                  const file = e.dataTransfer.files[0]
-                  if (file) handleCsvFile(file)
-                }}
-              >
-                <input
-                  ref={csvRef}
-                  type="file"
-                  accept=".csv,.txt"
-                  className="hidden"
-                  onChange={e => {
-                    const file = e.target.files?.[0]
-                    if (file) handleCsvFile(file)
-                    e.target.value = ''
-                  }}
-                />
-                <span className="text-[13px] text-[var(--color-ink-3)]">
-                  Drop CSV or click to import — one row per line:{' '}
-                  <code className="font-mono">0xAddress,amount</code>
-                </span>
-              </div>
-
-              {/* Recipient list */}
-              {recipients.length > 0 ? (
-                <div className="mt-4 space-y-1.5">
-                  {recipients.map((r, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between rounded-lg border border-[var(--color-border)] px-3 py-2"
-                    >
-                      <div className="flex min-w-0 items-center gap-2">
-                        <ShieldBadge />
-                        <span className="truncate font-mono text-[12px] text-[var(--color-ink-2)]">
-                          {r.address.slice(0, 6)}…{r.address.slice(-4)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-[12px] text-[var(--color-ink)]">
-                          {r.amount}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => removeRecipient(i)}
-                          className="text-[11px] text-[var(--color-ink-3)] hover:text-red-500"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => setRecipients([])}
-                    className="mt-1 text-[12px] text-[var(--color-ink-3)] hover:text-red-500"
-                  >
-                    Clear all
-                  </button>
-                </div>
-              ) : (
-                <div className="mt-4 rounded-lg border border-dashed border-[var(--color-border)] bg-[var(--color-cream)] px-4 py-6 text-center">
-                  <span className="text-[13px] text-[var(--color-ink-3)]">
-                    No recipients yet
-                  </span>
-                </div>
-              )}
-            </div>
+            {/* Recipient import — extracted component */}
+            <RecipientImport recipients={recipients} onRecipientsChange={setRecipients} />
 
             {/* Vesting */}
             <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-paper)] p-6">
@@ -339,36 +165,12 @@ export default function DispersePage() {
                 <span className="text-[var(--color-ink-3)]">{showVesting ? '−' : '+'}</span>
               </button>
               {showVesting && (
-                <div className="mt-4 grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block font-mono text-[11px] tracking-[0.04em] text-[var(--color-ink-3)]">
-                      Cliff (days)
-                    </label>
-                    <input
-                      type="number"
-                      value={cliffDays}
-                      onChange={e => setCliffDays(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-paper)] px-3 py-2 font-mono text-[13px] text-[var(--color-ink)] outline-none focus:border-[var(--color-ink-2)]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-mono text-[11px] tracking-[0.04em] text-[var(--color-ink-3)]">
-                      Linear vesting (days)
-                    </label>
-                    <input
-                      type="number"
-                      value={linearDays}
-                      onChange={e => setLinearDays(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-paper)] px-3 py-2 font-mono text-[13px] text-[var(--color-ink)] outline-none focus:border-[var(--color-ink-2)]"
-                    />
-                  </div>
-                  <p className="col-span-2 text-[13px] text-[var(--color-ink-3)]">
-                    Cliff + linear schedule encoded in AnimaDisperse.VestingSchedule. The claimable
-                    fraction is computed on-chain via{' '}
-                    <code className="font-mono">FHE.shr(FHE.mul(allocation, fraction), 20)</code> —
-                    never revealed.
-                  </p>
-                </div>
+                <VestingSchedule
+                  cliffDays={cliffDays}
+                  linearDays={linearDays}
+                  onCliffChange={setCliffDays}
+                  onLinearChange={setLinearDays}
+                />
               )}
             </div>
 
@@ -391,16 +193,37 @@ export default function DispersePage() {
                 {deployState.status === 'done' && (
                   <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-paper)] p-4">
                     <p className="text-[13px] text-[var(--color-ink)]">
-                      Distribution deployed at {deployState.airdropAddress.slice(0, 6)}&hellip;{deployState.airdropAddress.slice(-4)}.
+                      Distribution deployed as a <strong>TokenOps ConfidentialAirdrop</strong>{' '}
+                      clone.
                     </p>
-                    <Link
-                      href={`https://sepolia.etherscan.io/tx/${deployState.txHash}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-1 font-mono text-[12px] text-[var(--color-ink-2)] underline-offset-2 hover:underline"
-                    >
-                      {deployState.txHash.slice(0, 10)}… ↗
-                    </Link>
+                    <div className="mt-2 font-mono text-[12px] text-[var(--color-ink-2)]">
+                      Airdrop contract:{' '}
+                      <Link
+                        href={`/disperse/${deployState.airdropAddress}`}
+                        className="underline-offset-2 hover:underline hover:text-[var(--color-ink)]"
+                      >
+                        {deployState.airdropAddress.slice(0, 8)}…
+                        {deployState.airdropAddress.slice(-6)}
+                      </Link>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <Link
+                        href={`https://sepolia.etherscan.io/address/${deployState.airdropAddress}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-border)] px-3 py-1.5 font-mono text-[11px] text-[var(--color-ink-2)] transition-colors hover:bg-[var(--color-ink)] hover:text-[var(--color-cream)]"
+                      >
+                        Etherscan ↗
+                      </Link>
+                      <Link
+                        href={`https://sepolia.etherscan.io/tx/${deployState.txHash}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 rounded-lg border border-[var(--color-border)] px-3 py-1.5 font-mono text-[11px] text-[var(--color-ink-2)] transition-colors hover:bg-[var(--color-ink)] hover:text-[var(--color-cream)]"
+                      >
+                        Tx ↗
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
@@ -409,26 +232,8 @@ export default function DispersePage() {
 
           {/* ── Right column ──────────────────────────────────────────────── */}
           <div className="space-y-4">
-            {/* MEV risk calculator (real estimateMevExposure) */}
-            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-paper)] p-5">
-              <h3 className="font-display text-[15px] font-medium text-[var(--color-ink)]">
-                ⚠ MEV risk estimate
-              </h3>
-              <p className="mt-1 text-[13px] leading-[1.55] text-[var(--color-ink-2)]">
-                A public distribution of this size would expose approximately:
-              </p>
-              <div className="mt-3">
-                <div className="font-mono text-[22px] text-[var(--color-ink)]">
-                  {mevDisplay}
-                </div>
-                <div className="font-mono text-[12px] text-[var(--color-ink-3)]">
-                  to MEV front-runs (est. 17% within 72h)
-                </div>
-              </div>
-              <p className="mt-3 text-[12px] leading-[1.5] text-[var(--color-ink-2)]">
-                Source: TokenOps acquisition data. An encrypted distribution prevents this entirely.
-              </p>
-            </div>
+            {/* MEV risk calculator — extracted component */}
+            <RiskCalculator totalRaw={totalRaw} hasRecipients={recipients.length > 0} />
 
             {/* Recipient claim panel */}
             <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-paper)] p-5">
@@ -436,16 +241,11 @@ export default function DispersePage() {
                 Recipient claim
               </h3>
               <p className="mt-1 text-[13px] leading-[1.55] text-[var(--color-ink-2)]">
-                Share{' '}
-                <code className="font-mono text-[12px]">/disperse/[id]</code> with each recipient.
-                They connect, sign one EIP-712 — only their allocation decrypts, in their browser
-                only.
+                Share <code className="font-mono text-[12px]">/disperse/[id]</code> with each
+                recipient. They connect, sign one EIP-712 — only their allocation decrypts, in their
+                browser only.
               </p>
-              <ConfidentialAmount
-                label="Preview — your allocation"
-                value={null}
-                symbol="cToken"
-              />
+              <ConfidentialAmount label="Preview — your allocation" value={null} symbol="cToken" />
             </div>
 
             {/* Contract */}

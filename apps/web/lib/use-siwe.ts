@@ -75,7 +75,7 @@ export function useSiweAuth(): SiweAuth {
           'Sign in to the Anima console. This signature proves wallet ownership and creates a session cookie. No transactions are sent.',
         uri,
         version: '1',
-        chainId: chainId ?? 16661,
+        chainId: chainId ?? 11155111, // Sepolia (default fallback)
         nonce,
       })
       const signaturePromise = signMessageAsync({ message })

@@ -86,7 +86,7 @@ function CertificateCard() {
       <div className="space-y-1.5 border-y border-[var(--color-border)] py-4">
         <SlotRow label="Total Salaries Paid" value={`${TVS_BREAKDOWN.payroll.label}`} />
         <SlotRow label="Active Employees" value="3" />
-        <SlotRow label="Yield Vault" value="Steakhouse cPrime USDC" />
+        <SlotRow label="Yield Sub-Account" value="Internal FHE accounting" />
         <SlotRow label="Protocol" value="Zama FHEVM · euint64" />
         <SlotRow label="Chain" value="Ethereum Sepolia (11155111)" />
       </div>

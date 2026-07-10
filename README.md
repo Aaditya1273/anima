@@ -64,11 +64,11 @@ cast call 0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB "confidentialProtocolId()(u
   --rpc-url https://sepolia.infura.io/v3/34d389f9de9c42b4a696188beb46c03d
 
 # AnimaRegistryRouter — surfaces official Zama registry
-cast call 0x447356d0825409428F1D90E65e067A3710599f83 "officialPairCount()(uint256)" \
+cast call 0xa4F161f54BC0f57b6331309D57b0315139De96a4 "officialPairCount()(uint256)" \
   --rpc-url https://sepolia.infura.io/v3/34d389f9de9c42b4a696188beb46c03d
 
 # AnimaDisperse — confidential distribution engine
-cast call 0xdF687b7fD99E9291CD0633F8c122A8ff8712Ab61 "distributionCount()(uint256)" \
+cast call 0x20a35EE0Ba03D3B4d3e94A2bb970f5a2B1083d58 "distributionCount()(uint256)" \
   --rpc-url https://sepolia.infura.io/v3/34d389f9de9c42b4a696188beb46c03d
 ```
 
@@ -182,8 +182,8 @@ All contracts inherit `ZamaEthereumConfig`, use `@fhevm/solidity`, deployed on S
 | Contract | Address | Etherscan | Track |
 |---|---|---|---|
 | `AnimaPayroll` | `0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB` | [view ↗](https://sepolia.etherscan.io/address/0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB#code) | Builder |
-| `AnimaRegistryRouter` | `0x447356d0825409428F1D90E65e067A3710599f83` | [view ↗](https://sepolia.etherscan.io/address/0x447356d0825409428F1D90E65e067A3710599f83) | Bounty |
-| `AnimaDisperse` | `0xdF687b7fD99E9291CD0633F8c122A8ff8712Ab61` | [view ↗](https://sepolia.etherscan.io/address/0xdF687b7fD99E9291CD0633F8c122A8ff8712Ab61) | TokenOps |
+| `AnimaRegistryRouter` | `0xa4F161f54BC0f57b6331309D57b0315139De96a4` | [view ↗](https://sepolia.etherscan.io/address/0xa4F161f54BC0f57b6331309D57b0315139De96a4) | Bounty |
+| `AnimaDisperse` | `0x20a35EE0Ba03D3B4d3e94A2bb970f5a2B1083d58` | [view ↗](https://sepolia.etherscan.io/address/0x20a35EE0Ba03D3B4d3e94A2bb970f5a2B1083d58) | TokenOps |
 
 Deployed on Ethereum Sepolia (chainId 11155111) · Deployer `0x10625674f9780E604074e94b6F6f6F026f3a1BdA` · Deployed 2026-07-08
 

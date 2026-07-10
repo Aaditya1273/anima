@@ -22,13 +22,11 @@ import { ethers, run } from 'hardhat'
 
 // ─── Known Sepolia addresses ──────────────────────────────────────────────────
 // Official Zama Wrappers Registry on Sepolia.
-// Update once Zama publishes the final mainnet address.
-// Falls back to zero address — AnimaRegistryRouter will still deploy and
-// the address can be updated via re-deployment once official address is known.
+// Source: https://docs.zama.ai/protocol/addresses
 const ZAMA_WRAPPERS_REGISTRY_SEPOLIA =
   (process.env.ZAMA_WRAPPERS_REGISTRY && process.env.ZAMA_WRAPPERS_REGISTRY.startsWith('0x'))
     ? process.env.ZAMA_WRAPPERS_REGISTRY
-    : ethers.ZeroAddress
+    : '0x2f0750Bbb0A246059d80e94c454586a7F27a128e'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -115,9 +113,12 @@ async function main(): Promise<void> {
   console.log('───────────────────────────────────────────────────────\n')
 
   // ── 1. AnimaPayroll ─────────────────────────────────────────────────────────
-  // Already deployed in previous run — reuse address
-  const payrollAddr = '0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB'
-  console.log(`1/3  AnimaPayroll already deployed at ${payrollAddr} ✓`)
+  console.log('1/3  Deploying AnimaPayroll…')
+  const PayrollFactory = await ethers.getContractFactory('AnimaPayroll')
+  const payroll = await PayrollFactory.deploy()
+  await payroll.waitForDeployment()
+  const payrollAddr = await payroll.getAddress()
+  console.log(`     ✓ AnimaPayroll deployed at ${payrollAddr}`)
 
   // ── 2. AnimaRegistryRouter ──────────────────────────────────────────────────
   console.log('\n2/3  Deploying AnimaRegistryRouter…')

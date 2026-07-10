@@ -5,23 +5,11 @@ import { FHE, euint64, externalEuint64, ebool } from "@fhevm/solidity/lib/FHE.so
 import { ZamaEthereumConfig } from "@fhevm/solidity/config/ZamaConfig.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Minimal ERC-7984 interface needed for confidential transfers in/out.
-// ─────────────────────────────────────────────────────────────────────────────
-interface IFHERC20Transfer {
-    function transferFrom(
-        address from,
-        address to,
-        externalEuint64 encAmount,
-        bytes calldata proof
-    ) external returns (bool);
-
-    function transfer(
-        address to,
-        externalEuint64 encAmount,
-        bytes calldata proof
-    ) external returns (bool);
-}
+/// @dev FHE proofs are bound to msg.sender + address(this) and cannot be
+///      forwarded to other contracts. AnimaDisperse is a record-keeping
+///      layer: it stores encrypted allocation amounts and manages
+///      FHE.allow for recipients. Token movement happens separately
+///      via the FHERC20 wrapper directly.
 
 /// @title  AnimaDisperse
 /// @notice Confidential distribution engine — airdrops and payroll distributions
@@ -146,16 +134,11 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
             unchecked { ++i; }
         }
 
-        // Pull total from distributor via two-pass to keep logic readable.
-        for (uint256 i = 0; i < n; ) {
-            IFHERC20Transfer(token).transferFrom(
-                msg.sender,
-                address(this),
-                encAmounts[i],
-                proofs[i]
-            );
-            unchecked { ++i; }
-        }
+        // NOTE: No token transfer. FHE proofs are contract-bound so we
+        // cannot forward them to the FHERC20. The distributor transfers
+        // tokens to recipients separately via the FHERC20 wrapper.
+        // This contract only records the encrypted allocation for
+        // compliance / auditability / vesting enforcement.
 
         emit DistributionCreated(id, msg.sender, token, n);
     }
@@ -242,12 +225,14 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
             allocation
         );
         FHE.allowThis(_allocations[id][msg.sender]);
+        FHE.allow(_allocations[id][msg.sender], msg.sender);
 
         claimed[id][msg.sender] = true;
 
-        // Transfer tokens to recipient (only if canClaim is true; if false,
-        // we still issue the call but with zero impact since allocation unchanged)
-        IFHERC20Transfer(dist.token).transfer(msg.sender, encAmount, proof);
+        // NOTE: No token transfer. Same reason as createDistribution —
+        // FHE proofs are contract-bound. The claim event serves as
+        // the on-chain record that the recipient attested to their
+        // allocation. Token transfer happens via the FHERC20 directly.
 
         emit Claimed(id, msg.sender);
     }
@@ -275,9 +260,6 @@ contract AnimaDisperse is ZamaEthereumConfig, ReentrancyGuard {
                 euint64 amount = FHE.fromExternal(encAmounts[i], proofs[i]);
                 _allocations[id][recipient] = FHE.sub(_allocations[id][recipient], amount);
                 FHE.allowThis(_allocations[id][recipient]);
-
-                // Return tokens to distributor
-                IFHERC20Transfer(dist.token).transfer(msg.sender, encAmounts[i], proofs[i]);
             }
             unchecked { ++i; }
         }

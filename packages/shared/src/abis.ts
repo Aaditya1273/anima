@@ -214,18 +214,16 @@ export const ANIMA_REGISTRY_ROUTER_ABI = [
   {
     type: 'function', name: 'wrap', stateMutability: 'nonpayable',
     inputs:  [
-      { name: 'pairId',    type: 'uint256' },
-      { name: 'encAmount', type: 'bytes32' },
-      { name: 'proof',     type: 'bytes' },
+      { name: 'pairId',      type: 'uint256' },
+      { name: 'erc20Amount', type: 'uint256' },
     ],
     outputs: [],
   },
   {
     type: 'function', name: 'unwrap', stateMutability: 'nonpayable',
     inputs:  [
-      { name: 'pairId',    type: 'uint256' },
-      { name: 'encAmount', type: 'bytes32' },
-      { name: 'proof',     type: 'bytes' },
+      { name: 'pairId',      type: 'uint256' },
+      { name: 'erc20Amount', type: 'uint256' },
     ],
     outputs: [],
   },
@@ -334,10 +332,13 @@ export const ANIMA_DISPERSE_ABI = [
     type: 'function', name: 'requestDecryptPermit', stateMutability: 'nonpayable',
     inputs:  [{ name: 'id', type: 'uint256' }],
     outputs: [],
-  },
-  {
+  },  {
     type: 'function', name: 'claim', stateMutability: 'nonpayable',
-    inputs:  [{ name: 'id', type: 'uint256' }],
+    inputs: [
+      { name: 'id',        type: 'uint256' },
+      { name: 'encAmount', type: 'bytes32' },
+      { name: 'proof',     type: 'bytes' },
+    ],
     outputs: [],
   },
   {

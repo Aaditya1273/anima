@@ -1,9 +1,15 @@
+import {
+  ANIMA_DISPERSE_ADDRESS,
+  ANIMA_PAYROLL_ADDRESS,
+  ANIMA_REGISTRY_ROUTER_ADDRESS,
+} from '@anima/shared'
+
 const CHAINSCAN_BASE = 'https://sepolia.etherscan.io'
 
 export const CONTRACTS = {
-  AnimaPayroll: '0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB',
-  AnimaRegistryRouter: '0x447356d0825409428F1D90E65e067A3710599f83',
-  AnimaDisperse: '0xdF687b7fD99E9291CD0633F8c122A8ff8712Ab61',
+  AnimaPayroll: ANIMA_PAYROLL_ADDRESS,
+  AnimaRegistryRouter: ANIMA_REGISTRY_ROUTER_ADDRESS,
+  AnimaDisperse: ANIMA_DISPERSE_ADDRESS,
 } as const
 
 export function txUrl(hash: string) {
