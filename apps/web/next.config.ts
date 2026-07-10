@@ -1,4 +1,3 @@
-import { withSentryConfig } from '@sentry/nextjs'
 import type { NextConfig } from 'next'
 
 const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL ?? ''
@@ -6,62 +5,42 @@ const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL ?? ''
 const config: NextConfig = {
   reactStrictMode: true,
 
-  // ── CDN / asset prefix ─────────────────────────────────────────────────
-  // Set NEXT_PUBLIC_CDN_URL to your CDN origin (e.g. https://cdn.anima.xyz)
-  // and assets will be served from there in production builds.
   assetPrefix: CDN_URL || undefined,
   generateEtags: true,
-
-  // ── Compression ─────────────────────────────────────────────────────────
-  // Next.js built-in gzip compression (disabled if you terminate TLS at a
-  // reverse proxy like Cloudflare, Nginx, or Vercel's edge network).
   compress: true,
+  poweredByHeader: false,
 
-  // ── Image optimization ──────────────────────────────────────────────────
   images: {
     formats: ['image/avif', 'image/webp'],
     qualities: [70, 75, 85, 95],
-    // Cache optimized images on the CDN for 60 days
-    minimumCacheTTL: 60 * 24 * 60 * 60, // 60 days
-    // Allow remote images from known sources
+    minimumCacheTTL: 60 * 24 * 60 * 60,
     remotePatterns: [
       { protocol: 'https', hostname: '**.s0nderlabs.xyz' },
       { protocol: 'https', hostname: '**.anima.xyz' },
     ],
   },
 
-  // ── HTTP keep-alive ─────────────────────────────────────────────────────
-  httpAgentOptions: {
-    keepAlive: true,
-  },
-
-  // ── Transpile Zama SDK (ships as ESM, needs bundler handling) ──────────
-  transpilePackages: ['@zama-fhe/sdk', '@zama-fhe/react-sdk'],
+  httpAgentOptions: { keepAlive: true },
 
   // ── Bundle optimization ─────────────────────────────────────────────────
-  // Tree-shake larger packages automatically
+  // viem and rainbowkit are tree-shake-friendly. wagmi v3+ is safe to
+  // include here since useConnection (used by @zama-fhe/react-sdk) is a
+  // valid named export, so the namespace-import static-analysis issue is
+  // resolved. @zama-fhe/* remain excluded to avoid browser-API SSR crashes.
   experimental: {
     optimizePackageImports: [
-      '@sentry/nextjs',
       'framer-motion',
       'viem',
       'wagmi',
       '@rainbow-me/rainbowkit',
-      '@zama-fhe/sdk',
-      '@zama-fhe/react-sdk',
     ],
   },
 
-  // ── Server runtime ──────────────────────────────────────────────────────
-  serverExternalPackages: ['@zama-fhe/sdk'],
+  // turbopack.root intentionally omitted — Next.js resolves correctly
+  // when run via `pnpm --filter @anima/web dev` from the workspace root.
 
-  // ── Remove unnecessary headers ──────────────────────────────────────────
-  poweredByHeader: false,
-
-  // ── Security + caching headers ──────────────────────────────────────────
   async headers() {
     return [
-      // ── Global security headers ─────────────────────────────────────────
       {
         source: '/(.*)',
         headers: [
@@ -71,64 +50,24 @@ const config: NextConfig = {
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
         ],
       },
-      // ── Static assets: long-lived cache ─────────────────────────────────
       {
         source: '/fonts/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        source: '/images/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
         source: '/_next/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
-          },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
-      // ── Landing page: CDN cache for 5 minutes ───────────────────────────
       {
         source: '/',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, s-maxage=300, stale-while-revalidate=600',
-          },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=300, stale-while-revalidate=600' }],
       },
-      // ── Docs: CDN cache for 1 hour (content changes infrequently) ───────
       {
         source: '/docs/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, s-maxage=3600, stale-while-revalidate=3600',
-          },
-        ],
+        headers: [{ key: 'Cache-Control', value: 'public, s-maxage=3600, stale-while-revalidate=3600' }],
       },
     ]
   },
-
-
 }
 
-export default withSentryConfig(config, {
-  silent: !process.env.CI,
-  widenClientFileUpload: true,
-  tunnelRoute: '/monitoring',
-  disableLogger: true,
-  autoInstrumentServerFunctions: true,
-})
+export default config

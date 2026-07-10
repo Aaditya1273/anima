@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack -p 3210",
+    "dev": "next dev -p 3210",
     "build": "next build",
     "start": "next start -p 3210",
     "typecheck": "tsc --noEmit",
@@ -18,8 +18,9 @@
     "@sentry/nextjs": "^10.64.0",
     "@tanstack/react-query": "^5.100.10",
     "@tokenops/sdk": "1.1.1",
-    "@zama-fhe/react-sdk": "^3.3.0-alpha.11",
-    "@zama-fhe/sdk": "^3.3.0-alpha.11",
+    "@zama-fhe/react-sdk": "^3.3.0",
+    "@zama-fhe/sdk": "^3.3.0",
+    "accounts": "~0.14",
     "framer-motion": "^11.18.2",
     "gsap": "^3.12.7",
     "iron-session": "^8.0.4",
@@ -31,8 +32,8 @@
     "rehype-sanitize": "^6.0.0",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.0",
-    "viem": "^2.48.11",
-    "wagmi": "^2.14"
+    "viem": "^2.55.0",
+    "wagmi": "^3.7.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
