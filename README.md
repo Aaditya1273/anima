@@ -35,7 +35,7 @@ Every FHE demo shows a counter or a token transfer. Anima shows a use case that 
 |---|---|---|
 | **Payroll on-chain** | Every salary is public — competitors know your burn rate, employees know each other's pay | Salary amounts are `euint64` handles. Only the employee and the auditor can decrypt |
 | **Token distributions** | Public airdrops expose $X to MEV front-runs. Average price drawdown: 17% in 72h | Recipient list and amounts are encrypted on-chain. MEV bots see addresses, never amounts |
-| **DeFi with compliance** | Private holdings and public DeFi are two separate worlds | Shield to cUSDC → one-click earn yield on Morpho, amount stays encrypted the whole way |
+| **DeFi with compliance** | Private holdings and public DeFi are two separate worlds | Shield to cUSDC → move to internal yield sub-account, amount stays encrypted the whole way |
 | **Regulatory audit** | Privacy and compliance are mutually exclusive on public chains | Auditors get `FHE.allow` on selected balances — decryptable on demand, invisible by default |
 
 ---
@@ -50,7 +50,7 @@ Every FHE demo shows a counter or a token transfer. Anima shows a use case that 
 
 | Track | Contract | What makes it 1st-place |
 |---|---|---|
-| **Builder Track** | `AnimaPayroll.sol` | Programmable compliance: employee/CFO/auditor roles with selective `FHE.allow` disclosure. Composability: shield salary → earn yield on Morpho via Steakhouse Confidential Prime USDC vault. TVS dashboard on `/console`. |
+| **Builder Track** | `AnimaPayroll.sol` | Programmable compliance: employee/CFO/auditor roles with selective `FHE.allow` disclosure. Composability: shield salary → move to internal yield sub-account via `earnYield()`. Amount stays encrypted throughout. |
 | **Bounty Track** | `AnimaRegistryRouter.sol` | Reads the *official* Zama Wrappers Registry on Sepolia via RPC — no duplicate registry. Your router wraps official pairs. `officialPairCount()` returns the same number as Zama's registry. |
 | **Special Bounty × TokenOps** | `AnimaDisperse.sol` + `@tokenops/sdk` | `TokenOpsClient.createConfidentialAirdrop()` handles encryption + on-chain proof. Signaling-risk calculator shows estimated MEV cost before confirming. Optional vesting curves (cliff + linear, all encrypted). |
 
@@ -60,15 +60,15 @@ Every FHE demo shows a counter or a token transfer. Anima shows a use case that 
 # Requires cast (Foundry). All three contracts live on Ethereum Sepolia.
 
 # AnimaPayroll — confidential payroll vault (verified on Etherscan)
-cast call 0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB "confidentialProtocolId()(uint256)" \
+cast call 0x2B7b67a1470F382078c1A3f58d5004d94E7D9299 "confidentialProtocolId()(uint256)" \
   --rpc-url https://sepolia.infura.io/v3/34d389f9de9c42b4a696188beb46c03d
 
 # AnimaRegistryRouter — surfaces official Zama registry
-cast call 0xa4F161f54BC0f57b6331309D57b0315139De96a4 "officialPairCount()(uint256)" \
+cast call 0xE39423560aD4c6ab59A71d38cB16FcE18afecA84 "officialPairCount()(uint256)" \
   --rpc-url https://sepolia.infura.io/v3/34d389f9de9c42b4a696188beb46c03d
 
 # AnimaDisperse — confidential distribution engine
-cast call 0x20a35EE0Ba03D3B4d3e94A2bb970f5a2B1083d58 "distributionCount()(uint256)" \
+cast call 0x43195F579aE215d5A90A2811A379B6535f51C599 "distributionCount()(uint256)" \
   --rpc-url https://sepolia.infura.io/v3/34d389f9de9c42b4a696188beb46c03d
 ```
 
@@ -78,17 +78,17 @@ cast call 0x20a35EE0Ba03D3B4d3e94A2bb970f5a2B1083d58 "distributionCount()(uint25
 |---|---|---|
 | FHE payroll deposit + salary transfer | `contracts/src/AnimaPayroll.sol` | `apps/web/app/payroll/` |
 | Employee / CFO / Auditor role views | `AnimaPayroll.grantObserver()` | `apps/web/app/payroll/views/` |
-| Composable yield: shield → Morpho | `AnimaPayroll.earnYield()` | `apps/web/app/payroll/earn/` |
-| TVS dashboard | — | `apps/web/app/console/tvs.tsx` |
+| Composable yield: internal sub-account | `AnimaPayroll.earnYield()` | `apps/web/app/payroll/earn/` |
+| TVS dashboard | — | `apps/web/app/console/` |
 | Official registry indexer | `AnimaRegistryRouter.sol` | `apps/web/app/registry/` |
-| Wrap / unwrap official pairs | `AnimaRegistryRouter.wrap()` | `apps/web/app/registry/[pairId]/` |
-| EIP-712 balance decrypt | `grantDecryptPermit()` | `apps/web/components/fhe/DecryptButton.tsx` |
-| cTokenMock faucet | `AnimaRegistryRouter.faucet()` | `apps/web/app/registry/faucet/` |
+| Wrap / unwrap official pairs | `AnimaRegistryRouter.wrap()` | `apps/web/app/registry/` |
+| EIP-712 balance decrypt | `useConfidentialBalance` | `apps/web/components/fhe/DecryptButton.tsx` |
+| cTokenMock faucet | `AnimaRegistryRouter.faucet()` | `apps/web/app/registry/` (inline) |
 | TokenOps confidential airdrop | `AnimaDisperse.sol` + `@tokenops/sdk` | `apps/web/app/disperse/` |
-| Signaling-risk calculator | — | `apps/web/app/disperse/risk-calculator.tsx` |
-| Recipient self-decrypt | `AnimaDisperse.requestDecryptPermit()` | `apps/web/app/disperse/[distId]/` |
-| Encrypted vesting curves | `AnimaDisperse.createVestingSchedule()` | `apps/web/app/disperse/vesting/` |
-| In-browser decryption (EIP-712) | — | `apps/web/lib/crypto/` |
+| Signaling-risk calculator | — | `apps/web/app/disperse/` (inline) |
+| Recipient self-decrypt | `AnimaDisperse.requestDecryptPermit()` | `apps/web/app/disperse/` |
+| Encrypted vesting curves | `AnimaDisperse.createDistribution()` | `apps/web/app/disperse/` (inline) |
+| In-browser decryption (EIP-712) | `@zama-fhe/react-sdk` | `apps/web/components/fhe/` |
 | Relayer proxy (API key server-side) | — | `app/api/relayer/[chainId]/route.ts` |
 
 </details>
@@ -108,23 +108,21 @@ Anima
 │   ├── Employee sees only their own balance
 │   ├── CFO sees encrypted aggregate (FHE.add across employees)
 │   ├── Auditor decrypts specific balances via FHE.allow + EIP-712 when legally required
-│   ├── One-click yield: shield salary → earn on Morpho (Steakhouse Confidential Prime USDC)
-│   │   amount never decrypted — composability proof against live Mainnet vault
-│   └── TVS dashboard: Total Value Shielded across all surfaces
+│   ├── Internal yield sub-account: move shielded salary into a separate yield
+│   │   tracking balance via `earnYield()` — amount stays encrypted throughout
 │
 ├── Wrapper Registry         (Bounty Track)
 │   ├── Indexes the official Zama Wrappers Registry via RPC — no duplicate state
-│   ├── One-click wrap / unwrap any official ERC-20 ↔ ERC-7984 pair
+│   ├── Wrap / unwrap any official ERC-20 ↔ ERC-7984 pair
 │   ├── EIP-712 user-decryption for any ERC-7984 balance
-│   ├── "Add to Hardhat" button: copies import + address with one click
-│   └── Built-in Sepolia faucet for official cTokenMocks
+│   └── Sepolia faucet for official cTokenMocks
 │
 └── Disperse                 (Special Bounty × TokenOps)
     ├── TokenOps SDK: createConfidentialAirdrop handles encryption + on-chain proof
     ├── Signaling-risk calculator: shows estimated MEV front-run cost before deploy
-    ├── CSV / JSON recipient import
+    ├── CSV recipient import
     ├── Each recipient's allocation encrypted on-chain — list is never public
-    ├── Recipient self-decrypt: one EIP-712 sig reveals only their own amount
+    ├── Recipient self-decrypt: requestDecryptPermit + EIP-712 sig reveals only their own amount
     └── Vesting curves: cliff + linear, fully encrypted
 ```
 
@@ -146,7 +144,6 @@ flowchart LR
       Router["AnimaRegistryRouter\nwraps official Zama pairs"]
       Disperse["AnimaDisperse\nTokenOps distribution engine"]
       FHEVM["Zama FHEVM co-processor\neuint64 · ebool · FHE ops"]
-      Morpho["Steakhouse cPrime USDC\n(Morpho · composability proof)"]
     end
     Relay["Zama Relayer\n(proxied, API key stays server-side)"]
 
@@ -159,7 +156,6 @@ flowchart LR
     Payroll --> FHEVM
     Router --> FHEVM
     Disperse --> FHEVM
-    Payroll -.->|shield + earn| Morpho
     Crypto <--> Relay
 ```
 
@@ -171,7 +167,7 @@ flowchart LR
 | Client encryption | `@zama-fhe/react-sdk` | Encrypts inputs, decrypts permitted values — no plaintext touches the server |
 | Distribution engine | `@tokenops/sdk` | `createConfidentialAirdrop`, vesting curves, on-chain proofs |
 | Network | Ethereum Sepolia (11155111) | All contracts deployed and Etherscan-verified |
-| Composability | Morpho (Steakhouse Confidential Prime USDC) | Shielded salary earns yield without ever decrypting |
+| Composability | Internal yield sub-account | Shielded salary moved to separate tracking balance via `earnYield()` |
 
 ---
 
@@ -181,9 +177,9 @@ All contracts inherit `ZamaEthereumConfig`, use `@fhevm/solidity`, deployed on S
 
 | Contract | Address | Etherscan | Track |
 |---|---|---|---|
-| `AnimaPayroll` | `0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB` | [view ↗](https://sepolia.etherscan.io/address/0x86ba59BdC7c6854610892B8a7B76294a94b8d1cB#code) | Builder |
-| `AnimaRegistryRouter` | `0xa4F161f54BC0f57b6331309D57b0315139De96a4` | [view ↗](https://sepolia.etherscan.io/address/0xa4F161f54BC0f57b6331309D57b0315139De96a4) | Bounty |
-| `AnimaDisperse` | `0x20a35EE0Ba03D3B4d3e94A2bb970f5a2B1083d58` | [view ↗](https://sepolia.etherscan.io/address/0x20a35EE0Ba03D3B4d3e94A2bb970f5a2B1083d58) | TokenOps |
+| `AnimaPayroll` | `0x2B7b67a1470F382078c1A3f58d5004d94E7D9299` | [view ↗](https://sepolia.etherscan.io/address/0x2B7b67a1470F382078c1A3f58d5004d94E7D9299#code) | Builder |
+| `AnimaRegistryRouter` | `0xe2574934Bc5fEa0158446e68a3d5AaEBc74838DB` | [view ↗](https://sepolia.etherscan.io/address/0xe2574934Bc5fEa0158446e68a3d5AaEBc74838DB) | Bounty |
+| `AnimaDisperse` | `0x43195F579aE215d5A90A2811A379B6535f51C599` | [view ↗](https://sepolia.etherscan.io/address/0x43195F579aE215d5A90A2811A379B6535f51C599) | TokenOps |
 
 Deployed on Ethereum Sepolia (chainId 11155111) · Deployer `0x10625674f9780E604074e94b6F6f6F026f3a1BdA` · Deployed 2026-07-08
 
@@ -240,8 +236,11 @@ function withdraw(externalEuint64 encAmount, bytes calldata proof) external {
     FHE.allow(_salaries[msg.sender], msg.sender);
 }
 
-// Composable yield: shield salary → deposit into Morpho cPrime USDC vault
-// Amount never decrypted — encrypted balance passed directly to vault interface
+// Internal yield sub-account: move shielded salary into a separate FHE tracking
+// balance via `earnYield()` — amount stays encrypted throughout. This is an
+// internal accounting split between _balances and _yieldBalances, not an
+// external vault call. A Morpho vault integration would require deploying a
+// confidential yield vault that accepts ERC-7984 handles.
 function earnYield(externalEuint64 encAmount, bytes calldata proof) external { ... }
 ```
 
@@ -306,31 +305,23 @@ anima/
 │       ├── app/
 │       │   ├── payroll/              Builder Track: payroll vault UI
 │       │   │   ├── page.tsx          Employee / CFO / Auditor view switcher
-│       │   │   ├── earn/             Shield → Morpho yield flow
+│       │   │   ├── earn/             Yield sub-account flow
 │       │   │   └── views/            Role-specific decryption views
 │       │   ├── registry/             Bounty Track: official registry + wrap/unwrap
-│       │   │   ├── page.tsx          Pair table (sourced from official registry)
-│       │   │   ├── [pairId]/         Wrap / unwrap / decrypt per pair
-│       │   │   └── faucet/           cTokenMock mint
+│       │   │   ├── page.tsx          Pair table + wrap + faucet (inline)
 │       │   ├── disperse/             TokenOps: confidential distribution
-│       │   │   ├── page.tsx          Create distribution + signaling-risk calculator
-│       │   │   ├── [distId]/         Recipient: reveal + claim
-│       │   │   └── vesting/          Vesting schedule builder
-│       │   ├── console/              Operator dashboard + TVS dashboard
+│       │   │   ├── page.tsx          Create distribution + recipients + vesting (inline)
+│       │   ├── console/              Operator dashboard
 │       │   └── api/
 │       │       ├── relayer/[chainId] Zama relayer proxy (API key server-side)
 │       │       └── auth/             SIWE nonce / verify / me / logout
 │       ├── components/
 │       │   ├── fhe/                  ConfidentialAmount, FheInput, DecryptButton, ShieldBadge
-│       │   ├── payroll/              SalaryRow, RoleView, YieldCard, TVSCounter
-│       │   ├── registry/             PairTable, WrapForm, FaucetButton, HardhatCopyButton
-│       │   └── disperse/             RecipientImport, RiskCalculator, AllocationRow, ClaimCard
 │       └── lib/
 │           ├── zama/                 ZamaSDK config, wagmi + ZamaProvider setup
-│           ├── tokenops/             TokenOpsClient init, createConfidentialAirdrop wrapper
-│           ├── crypto/               Browser-side AES-GCM, HKDF, EIP-712 decrypt (kept from v1)
-│           ├── chain/                Sepolia chain def, contract ABIs, viem clients
-│           └── siwe/                 iron-session SIWE auth (kept from v1)
+│           ├── tokenops/             TokenOps factory client wrapper
+│           ├── chainscan.ts          Sepolia helper (address URLs, truncation)
+│           └── siwe/                 iron-session SIWE auth
 ├── contracts/
 │   ├── src/
 │   │   ├── AnimaPayroll.sol          Builder: payroll vault + observer roles + yield composability
@@ -422,8 +413,7 @@ pnpm dev
 2. Go to `/payroll` → CFO view
 3. Add employees, grant an auditor address via `grantObserver(auditor)`
 4. **Pay salary** — enter employee + encrypted amount. The SDK encrypts client-side, sends ZKPoK + ciphertext. Auditor gets `FHE.allow` automatically on every payment.
-5. **Earn yield** — click "Earn Yield" on any balance. Shields salary directly into the Steakhouse Confidential Prime USDC vault on Morpho. Amount stays encrypted through the entire deposit.
-6. **TVS** — `/console` shows Total Value Shielded across vault, registry, and disperse in real time.
+5. **Earn yield** — click "Earn Yield" on any balance. Moves salary into an internal yield tracking sub-account via `earnYield()`. Amount stays encrypted throughout.
 
 **As an employee:**
 1. Go to `/payroll` → Employee view
@@ -443,7 +433,7 @@ pnpm dev
 4. **Wrap** — select pair, enter amount, click Wrap. Calls the official ERC-7984 wrapper directly.
 5. **Unwrap** — two-step flow with progress callbacks: "Submitting unwrap…" → "Waiting for decryption proof…" → "Complete."
 6. **Decrypt balance** — click the lock icon on any ERC-7984 row. EIP-712 sign → balance decrypted in-browser.
-7. **Add to Hardhat** — one button copies `import { IConfidentialToken } from "@openzeppelin/confidential"` and the exact pair address to clipboard. Eliminates the fragmentation Zama is fighting.
+
 
 ### Disperse (Special Bounty × TokenOps)
 
@@ -453,12 +443,10 @@ pnpm dev
 3. Import recipients: drag-and-drop CSV, paste JSON, or add manually
 4. **Signaling-risk calculator** runs automatically: "A public distribution of this size would expose $X to MEV bots. Estimated front-run cost: ~17% within 72h." Source: TokenOps acquisition data.
 5. Optionally configure vesting: cliff (days) + linear vesting period — all encrypted
-6. **Deploy** — `TokenOpsClient.createConfidentialAirdrop()` encrypts all amounts, generates ZKPoKs, submits `AnimaDisperse.createDistribution`. On success: "Distribution sealed. 0 addresses or amounts publicly visible."
-7. Share claim links per recipient, or post the root URL `/disperse/[distId]`
+6. **Deploy** — `createConfidentialAirdrop()` (via `@tokenops/sdk`) encrypts all amounts and deploys a confidential airdrop clone. The TokenOps SDK manages encryption + on-chain proof in one call.
 
 **As a recipient:**
-1. Open your claim link `/disperse/[distId]`
-2. Connect wallet — if you have an allocation, "You have a pending allocation" appears
+1. Connect wallet — if you have an allocation, "You have a pending allocation" appears
 3. **Reveal my allocation** — one EIP-712 signature. Only your amount decrypts, in your browser only.
 4. **Claim** — one transaction. Tokens arrive in your wallet.
 
@@ -543,17 +531,6 @@ Anima calls both unconditionally on every mutation in every contract.
 
 ---
 
-## TVS — Total Value Shielded
-
-Anima tracks TVS across all three surfaces and displays it on `/console`. This is the metric Zama uses to measure protocol adoption. Anima is the first Season 3 submission to report it as a first-class number.
-
-```
-TVS = Σ encrypted vault balances
-    + Σ wrapped ERC-7984 balances via registry router
-    + Σ unclaimed encrypted distribution allocations
-```
-
-TVS is computed from on-chain encrypted supply via `IERC7984.totalEncryptedSupply()` — no decryption needed. The console shows the USD equivalent using public ERC-20 price feeds for the underlying asset.
 
 ---
 
@@ -602,11 +579,11 @@ pnpm typecheck            # typecheck everything
 
 `/console` is Anima's multi-surface operator dashboard. Connect any EIP-1193 wallet, sign in with SIWE, and manage everything in one place:
 
-- **TVS dashboard** — Total Value Shielded across all three surfaces
 - **Payroll view** — employee / CFO / auditor role switch with appropriate decrypt access
 - **Registry** — wrap/unwrap and faucet shortcuts
-- **Disperse** — manage distributions, view pending claims
+- **Disperse** — create confidential distributions
 - All decryption runs in-browser via EIP-712. No key material touches the server.
+- **On-chain metrics** — real-time protocol ID, pair count, distribution count from the deployed contracts
 
 ---
 
@@ -619,10 +596,8 @@ Building for **Zama Developer Program Season 3** (Builder, Bounty, Special Bount
 - [ ] `AnimaDisperse.sol` + `@tokenops/sdk` integration — contract + tests
 - [ ] Sepolia deployment + Etherscan verification
 - [ ] Frontend: payroll views (employee / CFO / auditor)
-- [ ] Frontend: TVS dashboard
-- [ ] Frontend: registry pair table + wrap/unwrap
-- [ ] Frontend: disperse + signaling-risk calculator
-- [ ] Frontend: vesting schedule builder
+- [x] Frontend: registry pair table + wrap/unwrap
+- [x] Frontend: disperse + signaling-risk calculator
 - [ ] 3-minute video demo
 
 ---

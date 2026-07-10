@@ -1,8 +1,0 @@
-{
-  "v": 2,
-  "root": "# MEMORY.md\n\n- [identity](./agent/identity.md) frozen compat index\n",
-  "files": {
-    "learned-frozen.md": "# Learned\n\nThe pack-blob v2 envelope is frozen for compat.\n",
-    "operator-preferences.md": "# Operator Preferences\n\ndark mode, bun runtime\n"
-  }
-}
