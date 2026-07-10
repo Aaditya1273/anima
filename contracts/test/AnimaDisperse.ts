@@ -206,10 +206,17 @@ describe('AnimaDisperse', function () {
 
     const encHandle = await disperse.connect(actors.alice).getAllocation(0n)
 
-    // userDecryptEuint with bob's signer — should fail (no FHE.allow for bob)
-    await expect(
-      fhevm.userDecryptEuint(FhevmType.euint64, encHandle, disperseAddress, actors.bob),
-    ).to.be.reverted
+    // userDecryptEuint with bob's signer — should throw (no FHE.allow for bob)
+    // userDecryptEuint throws a JS Error, not a Solidity revert, so we use try/catch
+    {
+      let errored = false
+      try {
+        await fhevm.userDecryptEuint(FhevmType.euint64, encHandle, disperseAddress, actors.bob)
+      } catch {
+        errored = true
+      }
+      expect(errored).to.eq(true, 'expected bob decrypt to fail')
+    }
   })
 
   // ── claim ────────────────────────────────────────────────────────────────────

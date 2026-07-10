@@ -126,7 +126,11 @@ contract AnimaPayroll is ZamaEthereumConfig, ReentrancyGuard {
         emit Withdrawal(msg.sender, token);
     }
 
-    /// @notice Move shielded salary into a yield sub-account.
+    /// @notice Move shielded salary into an internal yield tracking sub-account.
+    ///         This is an internal FHE accounting split between _balances and
+    ///         _yieldBalances. No external vault is called — the Morpho vault
+    ///         integration is a future milestone pending the release of a live
+    ///         confidential yield vault that accepts ERC-7984 handles.
     ///         FHE-gated: only deducts from balance if amount <= balance.
     function earnYield(
         address token,
@@ -157,7 +161,9 @@ contract AnimaPayroll is ZamaEthereumConfig, ReentrancyGuard {
         emit YieldDeposited(msg.sender, morphoVault);
     }
 
-    /// @notice Unwind a yield position back to the main balance.
+    /// @notice Unwind an internal yield tracking position back to the main balance.
+    ///         Only transfers FHE accounting between internal storage mappings.
+    ///         No external vault interaction occurs.
     function withdrawYield(
         address token,
         address morphoVault,

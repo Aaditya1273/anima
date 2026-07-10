@@ -178,20 +178,18 @@ describe('AnimaRegistryRouter', function () {
       .withArgs(actors.alice.address, wrapperAddress)
   })
 
-  it('after grantDecryptPermit alice can decrypt her balance', async function () {
+  it('alice can decrypt her balance — FHE.allow was granted by wrapper during mintEncrypted', async function () {
     // Mint some wrapped tokens to alice via mock
     await wrapper.connect(actors.deployer).mintEncrypted(actors.alice.address, 300n)
 
-    // Grant decrypt permit
-    let tx = await router.connect(actors.alice).grantDecryptPermit(wrapperAddress)
-    await tx.wait()
-
-    // Alice decrypts her balance via userDecryptEuint
+    // Alice decrypts her balance via userDecryptEuint.
+    // The handle is owned by the wrapper (which called FHE.allowThis),
+    // and the wrapper already granted FHE.allow(alice) in mintEncrypted.
     const encHandle = await wrapper.balanceOf(actors.alice.address)
     const clearBalance = await fhevm.userDecryptEuint(
       FhevmType.euint64,
       encHandle,
-      routerAddress,
+      wrapperAddress,  // wrapper owns the handle; router cannot FHE.allow
       actors.alice,
     )
 

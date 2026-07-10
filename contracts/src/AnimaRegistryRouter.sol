@@ -164,20 +164,21 @@ contract AnimaRegistryRouter is ZamaEthereumConfig, ReentrancyGuard {
 
     // ─── EIP-712 decrypt permit ───────────────────────────────────────────────
 
-    /// @notice Grant the caller FHE.allow on their own ERC-7984 balance.
-    ///         After this call the caller can decrypt their balance off-chain
-    ///         using the EIP-712 user-decryption flow without any further
-    ///         on-chain interaction.
+    /// @notice Grant the caller permission to decrypt their own ERC-7984 balance.
     ///
-    ///         This function is what the Bounty Track brief requires:
-    ///         "EIP-712 user-decryption flow for any ERC-7984 balance."
+    ///         ⚠️ FHE handles are contract-bound — only the ERC-7984 wrapper that
+    ///         created a handle can call FHE.allow on it. The router cannot
+    ///         forward FHE.allow calls. Therefore this function only emits an
+    ///         on-chain audit event. The caller must interact with the wrapper
+    ///         contract directly for off-chain decryption.
     ///
-    /// @param  token  ERC-7984 token address (must be an official registry pair)
+    ///         In practice, the ERC-7984 wrapper's mint/transfer functions already
+    ///         call FHE.allow(handle, recipient), so decryption works out of the
+    ///         box via the EIP-712 user-decryption flow without any extra on-chain
+    ///         call.
+    ///
+    /// @param  token  ERC-7984 token address
     function grantDecryptPermit(address token) external {
-        euint64 balance = IERC7984Wrapper(token).balanceOf(msg.sender);
-        // Grant the caller permission to decrypt their own balance.
-        // FHE.allow emits an Access event that the Zama relayer monitors.
-        FHE.allow(balance, msg.sender);
         emit DecryptPermitGranted(msg.sender, token);
     }
 
