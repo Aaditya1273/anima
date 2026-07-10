@@ -39,19 +39,16 @@ export function PairTable({ pairs }: Props) {
     if (!wrap.amount) return
     setWrap(prev => ({ ...prev, status: 'broadcasting', error: null }))
     try {
-      // The wrap function takes externalEuint64 (bytes32 handle) + proof.
-      // Encryption must be done client-side via the Zama SDK before the tx.
-      // Until the Zama registry publishes official pairs on Sepolia, wrapping
-      // is blocked at the contract level — the router reverts on invalid pairs.
-      // This call is wired correctly and will work once real pairs are registered.
+      // The router's wrap function only pulls ERC-20 from the caller and
+      // approves the wrapper — it does NOT forward FHE proofs. The actual
+      // FHE wrapping (encrypted amount → confidential ERC-7984) happens
+      // directly on the wrapper contract via the Zama SDK. Until that SDK
+      // integration is wired, the erc20Amount is passed as the raw input.
       await writeContractAsync({
         address: ANIMA_REGISTRY_ROUTER_ADDRESS,
         abi: ANIMA_REGISTRY_ROUTER_ABI,
         functionName: 'wrap',
-        // Pass zero-bytes as encAmount placeholder — real encryption requires
-        // ZamaSDK.createEncryptedInput() which needs the connected wallet signer.
-        // The UI note below guides the user until the SDK integration is complete.
-        args: [BigInt(pairId), `0x${'00'.repeat(32)}` as `0x${string}`, '0x'],
+        args: [BigInt(pairId), BigInt(wrap.amount)],
       })
       setWrap({ pairId: null, amount: '', status: 'idle', error: null })
     } catch (e) {

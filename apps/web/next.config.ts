@@ -23,10 +23,6 @@ const config: NextConfig = {
   httpAgentOptions: { keepAlive: true },
 
   // ── Bundle optimization ─────────────────────────────────────────────────
-  // viem and rainbowkit are tree-shake-friendly. wagmi v3+ is safe to
-  // include here since useConnection (used by @zama-fhe/react-sdk) is a
-  // valid named export, so the namespace-import static-analysis issue is
-  // resolved. @zama-fhe/* remain excluded to avoid browser-API SSR crashes.
   experimental: {
     optimizePackageImports: [
       'framer-motion',
